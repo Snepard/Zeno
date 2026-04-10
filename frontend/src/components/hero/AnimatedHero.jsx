@@ -177,6 +177,7 @@ const AnimatedHero = () => {
                             <Canvas
                                 camera={{ position: [-0.8, 0.5, 4], fov: 45 }}
                                 className="w-full h-[90%]"
+                                frameloop="demand"
                                 shadows
                             >
                                 <Suspense fallback={null}>

@@ -1,7 +1,7 @@
 from ai_engine.context_engine.context_builder import build_context
 from ai_engine.context_engine.prompt_builder import build_rag_prompt
 from ai_engine.memory.memory_store import add_user_memory
-from ai_engine.llm.groq_client import client, PRIMARY_MODEL, FALLBACK_MODEL
+from ai_engine.llm.groq_client import generate_chat_completion
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,34 +19,9 @@ def handle_chat(job_id: str, user_id: str, question: str, current_slide: int, mo
     user_prompt = build_rag_prompt(context, question)
     system_prompt = "You are an advanced Context-Aware AI pedagogical assistant locally scoped entirely to strict textual constraints."
     
-    answer = ""
-    # 3. Call standard Groq LLM natively (General Text logic formatting bypassing Object limits securely)
-    try:
-        response = client.chat.completions.create(
-            model=PRIMARY_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.2, # Extremely strict analytical reasoning bound
-            max_tokens=2500,
-            timeout=25.0
-        )
-        answer = response.choices[0].message.content
-    except Exception as e:
-        logger.warning(f"[Chat LLM Primary Crash] {e} - Triggering Mixtral Fallback Route.")
-        response = client.chat.completions.create(
-            model=FALLBACK_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.2,
-            max_tokens=2500,
-            timeout=25.0
-        )
-        answer = response.choices[0].message.content
-
+    # 3. Call standard Groq LLM cascade natively (General Text logic formatting bypassing Object limits securely)
+    answer = generate_chat_completion(system_prompt, user_prompt, temperature=0.2)
+    
     # 4. Save sequence actively natively creating local User Memory array logs linearly over session
     add_user_memory(job_id, user_id, question, answer)
     

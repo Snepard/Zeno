@@ -4,9 +4,7 @@ import { Upload, CheckCircle, Loader, PlayCircle, Mic2 } from 'lucide-react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import Show from './components/Show';
 import Podcast from './components/Podcast';
-import { Canvas } from '@react-three/fiber';
-import { Environment } from '@react-three/drei';
-import { Ziva } from './components/Ziva';
+import VideoPlayer from './components/VideoPlayer';
 import FloatingLines from './components/FloatingLines';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
@@ -114,7 +112,7 @@ function App() {
         }
 
         try {
-            const endpoint = mode === 'podcast' ? 'podcast' : 'ppt';
+            const endpoint = mode === 'podcast' ? 'podcast' : mode === 'video' ? 'video' : 'ppt';
             const response = await axios.post(
                 `${API_BASE}/generate/${endpoint}`,
                 {
@@ -250,16 +248,10 @@ function App() {
                             <div className="flex-1 flex flex-col justify-center">
                                 {isGenerating ? (
                                     <div className="w-full flex flex-col items-center justify-center gap-8 py-4">
-                                        <div className="w-48 h-48 rounded-full bg-black/40 border-2 border-purple-500/30 overflow-hidden relative shadow-[0_0_50px_rgba(168,85,247,0.2)]">
-                                            <div className="absolute inset-0 rounded-full border border-purple-400/50 animate-[spin_4s_linear_infinite]" style={{ borderTopColor: 'transparent', borderRightColor: 'transparent' }} />
-                                            <Canvas camera={{ position: [0, 0.5, 3], fov: 40 }} style={{ width: '100%', height: '100%' }}>
-                                                <Suspense fallback={null}>
-                                                    <ambientLight intensity={0.3} />
-                                                    <spotLight position={[5, 5, 5]} intensity={0.6} />
-                                                    <Ziva position={[0, -2.2, 0]} scale={1.6} audio={null} playTick={0} />
-                                                    <Environment preset="city" />
-                                                </Suspense>
-                                            </Canvas>
+                                        <div className="w-48 h-48 rounded-full bg-black/40 border-2 border-purple-500/30 overflow-hidden relative shadow-[0_0_50px_rgba(168,85,247,0.2)] flex items-center justify-center">
+                                            <div className="absolute inset-0 rounded-full border-2 border-purple-400/50 animate-[spin_3s_linear_infinite]" style={{ borderTopColor: 'transparent' }} />
+                                            <div className="absolute inset-4 rounded-full border border-purple-300/30 animate-[spin_5s_linear_infinite_reverse]" style={{ borderTopColor: 'transparent' }} />
+                                            <span className="text-5xl select-none">🤖</span>
                                         </div>
 
                                         <div className="w-full max-w-xs">
@@ -290,6 +282,8 @@ function App() {
                                             onClick={() => {
                                                 if (completedMode === 'podcast') {
                                                     navigate(`/podcast/${completedJobId}`, { state: { initialMode: 'podcast' } });
+                                                } else if (completedMode === 'video') {
+                                                    navigate(`/video/${completedJobId}`);
                                                 } else {
                                                     navigate(`/show/${completedJobId}`);
                                                 }
@@ -329,6 +323,19 @@ function App() {
                                                 <p className="text-slate-400 text-[13px] leading-snug pr-4">An engaging, cinematic auditory experience featuring two AI hosts discussing the material.</p>
                                             </div>
                                         </button>
+
+                                        <button
+                                            onClick={() => handleGenerate('video')}
+                                            className="group relative w-full p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/50 transition-all text-left flex items-start gap-4 overflow-hidden"
+                                        >
+                                            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30 group-hover:scale-110 transition-transform">
+                                                <PlayCircle className="w-6 h-6 text-emerald-300" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-white font-bold text-[16px] mb-1 group-hover:text-emerald-300 transition-colors">Long-Form Video</h4>
+                                                <p className="text-slate-400 text-[13px] leading-snug pr-4">Generates a fully autonomous, rendered animated video sequentially spanning 10-60+ minutes.</p>
+                                            </div>
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -347,6 +354,7 @@ function App() {
             <Route path="/upload" element={UploadRoute} />
             <Route path="/show/:lectureId" element={<Show />} />
             <Route path="/podcast/:lectureId" element={<Podcast />} />
+            <Route path="/video/:lectureId" element={<VideoPlayer />} />
             <Route path="*" element={<Navigate to="/signin" replace />} />
         </Routes>
     );

@@ -1,34 +1,33 @@
 import logging
-import torch
+import httpx
+import os
 
 logger = logging.getLogger(__name__)
 
-# System delays PyTorch bootstrapping lazily avoiding locking Uvicorn RAM upon boot cycle
-TTS_MODEL = None
-use_cuda = torch.cuda.is_available()
-
-def get_coqui_tts():
-    global TTS_MODEL
-    if TTS_MODEL is None:
-        try:
-            # Importing locally scoped Coqui structural libraries manually
-            from TTS.api import TTS
-            # Loading VCTK VITS models safely natively onto explicit CUDA bounds avoiding cpu faults globally
-            logger.info(f"Allocating localized Core Model bounds natively deploying GPU {'ENABLED' if use_cuda else 'DISABLED'}")
-            TTS_MODEL = TTS(model_name="tts_models/en/vctk/vits", progress_bar=False, gpu=use_cuda)
-        except ImportError:
-            logger.error("Coqui TTS strictly unavailable inside local environment. Execute `pip install TTS`.")
-            raise ImportError("Critical ML Voice Engine unavailable")
-    return TTS_MODEL
+TTS_SERVICE_URL = "http://127.0.0.1:8001/generate-audio"
 
 def generate_coqui_tts(text: str, output_path: str) -> str:
-    """Guarantees local audio execution mapping locally inside container bypassing APIs completely."""
-    logger.info(f"Generating local Coqui VITS engine TTS natively checking constraints: {output_path}")
-    tts = get_coqui_tts()
-    tts.tts_to_file(text=text, file_path=output_path, speaker=tts.speakers[0] if tts.speakers else None)
+    """
+    Microservice Client architecture natively deployed. 
+    Protects the central FastAPI Node completely against NumPy C-binding corruptions
+    by explicitly bridging inference routing via HTTP to the localized Sub-Server Sandbox.
+    """
+    logger.info(f"Generating Coqui VITS TTS over secure internal Microservice Sandboxed Node: {output_path}")
     
-    # Securely flush rendering contexts strictly globally preventing heavy VRAM overflows!
-    if use_cuda:
-        torch.cuda.empty_cache()
+    try:
+        # Generate Absolute path strictly avoiding directory resolution gaps inside separate environments
+        abs_output_path = os.path.abspath(output_path)
         
-    return output_path
+        response = httpx.post(TTS_SERVICE_URL, json={
+            "text": text,
+            "output_path": abs_output_path
+        }, timeout=45.0)
+        
+        response.raise_for_status()
+        
+        if response.status_code == 200:
+            return abs_output_path
+            
+    except Exception as e:
+        logger.error(f"Coqui microservice strictly unavailable. Pipeline gracefully returning exception hook: {e}")
+        raise e

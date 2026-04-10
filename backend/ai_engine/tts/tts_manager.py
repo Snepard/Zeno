@@ -1,6 +1,6 @@
+import re
 import logging
 import asyncio
-from typing import Optional
 from ai_engine.tts.edge_tts_engine import generate_edge_tts
 from ai_engine.tts.coqui_tts_engine import generate_coqui_tts
 from ai_engine.tts.gtts_engine import generate_gtts
@@ -8,10 +8,49 @@ from storage.local_storage import ensure_job_directory
 
 logger = logging.getLogger(__name__)
 
+# Maps LaTeX patterns → natural speech
+_LATEX_MAP = [
+    (r"\\frac\{([^}]+)\}\{([^}]+)\}", r"\1 divided by \2"),
+    (r"\\sqrt\{([^}]+)\}", r"square root of \1"),
+    (r"\\cdot",    " times "),
+    (r"\\times",   " times "),
+    (r"\\pm",      " plus or minus "),
+    (r"\\infty",   "infinity"),
+    (r"\\alpha",   "alpha"),
+    (r"\\beta",    "beta"),
+    (r"\\gamma",   "gamma"),
+    (r"\\delta",   "delta"),
+    (r"\\theta",   "theta"),
+    (r"\\lambda",  "lambda"),
+    (r"\\mu",      "mu"),
+    (r"\\pi",      "pi"),
+    (r"\\sigma",   "sigma"),
+    (r"\\omega",   "omega"),
+    (r"\\sum",     "sum of"),
+    (r"\\int",     "integral of"),
+    (r"\\partial", "partial"),
+    (r"\\nabla",   "gradient"),
+    (r"\^2",       " squared"),
+    (r"\^3",       " cubed"),
+    (r"\^\{([^}]+)\}", r" to the power of \1"),
+    (r"\^\{?(\w)\}?", r" to the power \1"),
+    (r"_\{([^}]+)\}", r" subscript \1"),
+    (r"_(\w)",     r" sub \1"),
+    (r"\\left[\(\[]", ""),
+    (r"\\right[\)\]]", ""),
+    (r"\\mathbf\{([^}]+)\}", r"\1"),
+    (r"\{|\}", ""),
+    (r"\\", " "),
+    (r"\s{2,}", " "),
+]
+
 def sanitize_text(text: str, max_length: int = 4000) -> str:
-    """Limits structural API payloads aggressively bypassing 429 timeouts strictly."""
-    text = text.replace('\n', ' ').strip()
-    return text[:max_length]
+    """Strips LaTeX math notation into natural speech, then limits length."""
+    cleaned = text.replace('\n', ' ').strip()
+    for pattern, replacement in _LATEX_MAP:
+        cleaned = re.sub(pattern, replacement, cleaned)
+    return cleaned[:max_length].strip()
+
 
 def generate_audio_manager(text: str, job_id: str, filename: str, subfolder: str = "audio", speaker: str = "Ziva") -> str:
     """
