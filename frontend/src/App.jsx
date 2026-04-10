@@ -10,6 +10,9 @@ import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
 import LandingPage from './components/LandingPage';
 import { DEMO_LECTURE_ID, MOCK_MODE } from './config/mock';
+import { Canvas } from '@react-three/fiber';
+import { Environment } from '@react-three/drei';
+import { Ziva } from './components/Ziva';
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
@@ -251,7 +254,16 @@ function App() {
                                         <div className="w-48 h-48 rounded-full bg-black/40 border-2 border-purple-500/30 overflow-hidden relative shadow-[0_0_50px_rgba(168,85,247,0.2)] flex items-center justify-center">
                                             <div className="absolute inset-0 rounded-full border-2 border-purple-400/50 animate-[spin_3s_linear_infinite]" style={{ borderTopColor: 'transparent' }} />
                                             <div className="absolute inset-4 rounded-full border border-purple-300/30 animate-[spin_5s_linear_infinite_reverse]" style={{ borderTopColor: 'transparent' }} />
-                                            <span className="text-5xl select-none">🤖</span>
+                                            <div className="absolute inset-0 z-10 bg-black/20">
+                                                <Canvas camera={{ position: [0, 1.5, 3], fov: 35 }}>
+                                                    <ambientLight intensity={0.6} />
+                                                    <pointLight position={[5, 5, 5]} intensity={0.5} />
+                                                    <Suspense fallback={null}>
+                                                        <Ziva position={[0, -3.2, 0]} scale={2.2} overrideAnim="look around" />
+                                                        <Environment preset="city" />
+                                                    </Suspense>
+                                                </Canvas>
+                                            </div>
                                         </div>
 
                                         <div className="w-full max-w-xs">
