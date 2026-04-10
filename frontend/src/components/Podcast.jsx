@@ -373,8 +373,8 @@ function Podcast() {
 
                                 {/* Playback Buttons */}
                                 <div className="flex justify-between items-center w-full px-2">
-                                    <button onClick={handlePrev} className="text-white/60 hover:text-white transition flex items-center font-semibold gap-1.5 focus:outline-none text-sm tracking-wide" disabled={currentSlideIndex === 0}>
-                                        <SkipBack className="w-4 h-4" /> Prev Slide
+                                    <button onClick={handlePrev} className="text-white/60 hover:text-white transition flex items-center font-semibold gap-1.5 focus:outline-none text-sm tracking-wide" disabled={currentTurnIndex === 0}>
+                                        <SkipBack className="w-4 h-4" /> Prev Turn
                                     </button>
 
                                     <div className="flex items-center gap-6">
