@@ -4,7 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def generate_edge_tts(text: str, output_path: str, voice: str = "en-US-AriaNeural") -> str:
+async def generate_edge_tts(text: str, output_path: str, voice: str = "en-IN-NeerjaNeural") -> str:
     """Async execution layer directly binding Microsoft Edge Azure Cognitive Services TTS optimally."""
     logger.info(f"Generating Edge TTS sequence natively: {output_path}")
     communicate = edge_tts.Communicate(text, voice)

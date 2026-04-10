@@ -1,19 +1,13 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
-from db.database import get_db
-from models.user import User
-from schemas.job import JobResponse
+from fastapi import APIRouter, Depends, HTTPException
 from api.deps import get_current_user
-from controllers import job_controller
+from db.job_store import get_job
 
 router = APIRouter()
 
-@router.get("/{job_id}", response_model=JobResponse)
-async def get_job(
-    job_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Returns the job status for the current user."""
-    return await job_controller.handle_get_job(db, current_user, job_id)
+
+@router.get("/{job_id}")
+async def get_job_status(job_id: str, current_user: dict = Depends(get_current_user)):
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job

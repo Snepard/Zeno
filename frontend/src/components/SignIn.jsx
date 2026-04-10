@@ -75,7 +75,7 @@ const GlassInput = ({ icon: Icon, label, ...props }) => {
 
 // ---------- Main Component ----------
 const SignIn = () => {
-    const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:4000/api';
+    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1';
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({ email: '', password: '' });
@@ -115,7 +115,7 @@ const SignIn = () => {
                 email: formData.email,
                 password: formData.password,
             });
-            const token = response.data?.token;
+            const token = response.data?.access_token;
             if (token) {
                 localStorage.setItem('access_token', token);
                 axios.defaults.headers.common.Authorization = `Bearer ${token}`;
@@ -124,7 +124,7 @@ const SignIn = () => {
             navigate('/upload');
         } catch (err) {
             setIsLoading(false);
-            setError(err?.response?.data?.message || 'Sign in failed');
+            setError(err?.response?.data?.detail || err?.response?.data?.message || 'Sign in failed');
             triggerShake();
         }
     };

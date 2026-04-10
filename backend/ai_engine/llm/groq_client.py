@@ -3,13 +3,14 @@ import logging
 from groq import Groq
 from tenacity import retry, stop_after_attempt, wait_exponential
 from ai_engine.llm.json_parser import parse_llm_json
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
 # Booting exact Groq structural handlers maximizing rapid tokens inference
-API_KEY = os.getenv("GROQ_API_KEY", "your-groq-api-key")
-PRIMARY_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-FALLBACK_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "mixtral-8x7b-32768")
+API_KEY = settings.GROQ_API_KEY
+PRIMARY_MODEL = settings.GROQ_MODEL
+FALLBACK_MODEL = settings.GROQ_FALLBACK_MODEL
 
 client = Groq(api_key=API_KEY)
 
