@@ -1,20 +1,27 @@
-from fastapi import APIRouter, Depends, Path, Body
-from sqlalchemy.ext.asyncio import AsyncSession
-from db.database import get_db
-from models.user import User
-from models.job import JobType
-from schemas.job import JobResponse, JobCreate
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from typing import Optional
+
+from db.job_store import create_job, get_job
+from workers.runner import dispatch_job
 from api.deps import get_current_user
-from controllers import job_controller
 
 router = APIRouter()
 
-@router.post("/{type}", response_model=JobResponse)
-async def create_job(
-    type: JobType = Path(..., title="The type of job to generate (ppt, podcast, video)"),
-    job_in: JobCreate = Body(...),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Creates a new job with Topic and pushes it to the Celery queue instantly."""
-    return await job_controller.handle_create_job(db, current_user, type, job_in)
+
+class JobCreate(BaseModel):
+    topic: str
+
+
+@router.post("/ppt")
+async def generate_ppt(job_in: JobCreate, current_user: dict = Depends(get_current_user)):
+    job_id = create_job(current_user["id"], "ppt", job_in.topic)
+    dispatch_job(job_id, "ppt", job_in.topic)
+    return {"job_id": job_id, "status": "queued"}
+
+
+@router.post("/podcast")
+async def generate_podcast(job_in: JobCreate, current_user: dict = Depends(get_current_user)):
+    job_id = create_job(current_user["id"], "podcast", job_in.topic)
+    dispatch_job(job_id, "podcast", job_in.topic)
+    return {"job_id": job_id, "status": "queued"}

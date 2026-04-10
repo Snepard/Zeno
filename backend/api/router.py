@@ -6,6 +6,6 @@ from api.routes.chat import router as chat_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
-api_router.include_router(generate_router, prefix="/generate", tags=["generate"], responses={401: {"description": "Unauthorized"}})
-api_router.include_router(job_router, prefix="/job", tags=["job"], responses={401: {"description": "Unauthorized"}})
-api_router.include_router(chat_router, prefix="/chat", tags=["chat"], responses={401: {"description": "Unauthorized"}})
+api_router.include_router(generate_router, prefix="/generate", tags=["generate"])
+api_router.include_router(job_router, prefix="/job", tags=["job"])
+api_router.include_router(chat_router, prefix="/chat", tags=["chat"])

@@ -1,22 +1,44 @@
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
+import jwt
+from datetime import datetime, timedelta
 
-from db.database import get_db
-from schemas.user import UserResponse, UserCreate, Token
-from controllers import auth_controller
+from db.user_store import create_user, get_user_by_email, verify_password
+from config.settings import settings
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
-    """Registers a new user."""
-    return await auth_controller.handle_register(db, user_in)
+
+def _make_token(user_id: str) -> str:
+    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = {"sub": user_id, "exp": expire}
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+    full_name: str = ""
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+async def register(user_in: UserCreate):
+    try:
+        user = create_user(user_in.email, user_in.password, user_in.full_name)
+        return {"id": user["id"], "email": user["email"], "full_name": user["full_name"]}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/login", response_model=Token)
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
-):
-    """OAuth2 compatible token login, get an access token for future requests."""
-    return await auth_controller.handle_login(db, form_data)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = get_user_by_email(form_data.username)
+    if not user or not verify_password(form_data.password, user["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Incorrect email or password")
+    return {"access_token": _make_token(user["id"]), "token_type": "bearer"}
