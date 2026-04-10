@@ -1,199 +1,108 @@
-# Zeno AI Learning Platform
+# Zeno AI Guruji
 
-Production-oriented microservices scaffold for converting PDFs into:
+A production-grade Python/FastAPI backend system for dynamically converting PDFs into structured AI lectures, podcasts, and long-form Manim-animated educational videos.
 
-- AI lecture slides with narration
-- AI podcast in dual-speaker format
-- RAG flashcards
+## 🚀 Core Features
+1. **Long-Form Video Orchestration (Manim)**
+   - Generates automated video lectures (10-60+ mins) via `Manim` (Minim rendering).
+   - Seamless degradation fallback to `Pillow/MoviePy` if underlying system binaries fail.
+2. **Dual-Speaker AI Podcasts**
+   - Transcribes entire PDFs into structured dynamic scripts.
+   - Leverages `Edge-TTS` and a secondary fallback local CUDA microservice (`Coqui-TTS`).
+3. **Advanced LLM Pipeline Cascade**
+   - Fully isolated 3-tier fallback engine directly connected to `Groq`.
+   - Dedicated isolated API keys for independent quotas (Classroom, Podcast, Video).
+4. **Vector Memory RAG Chatbot**
+   - Interactive local assistant answering context-specific PDF doubts.
 
-## Architecture
+---
 
-Three-layer service split with strict separation of concerns:
+## 🏛 Architecture
 
-- `frontend/`: React + Tailwind UI only
-- `backend/`: Auth, API routing, job creation, status APIs
-- `ai-engine/`: FastAPI pipelines (LLM/TTS/RAG orchestration)
-- `workers/`: Celery workers for async execution and retries
-- `queue/`: Redis queue and caching design notes
-- `storage/`: Generated assets and vector index persistence
-- `shared/`: Cross-service schema/type contracts
-
-System flow:
-
-`Frontend -> Backend -> Redis Queue -> Workers -> AI Engine -> Storage -> Frontend`
-
-## Folder Structure
+To resolve fatal C-binding binary conflicts on Windows (`NumPy 2.x` vs `NumPy 1.22`), the architecture employs a pure **Sub-Service Node** structure:
 
 ```text
-/project-root
-  frontend/
-  backend/
-    api/
-    auth/
-    controllers/
-    services/
-    models/
-    config/
-  ai-engine/
-    pipelines/
-      lecture_pipeline/
-      podcast_pipeline/
-      ppt_pipeline/
-      rag_pipeline/
-    llm/
-    tts/
-    embeddings/
-    orchestrator/
-    utils/
-  workers/
-    lecture_worker.py
-    podcast_worker.py
-    ppt_worker.py
-  queue/
-  storage/
-    audio/
-    slides/
-    lectures/
-    vector_store/
-  shared/
-    schemas/
-    types/
+D:\Projects\Zeno\
+├── backend\                      # Primary Pipeline Engine
+│   ├── api\                      # FastAPI Endpoint Handlers
+│   ├── ai_engine\
+│   │   ├── video\
+│   │   │   ├── minim_renderer.py # Manim Video Generator
+│   │   │   └── animation_builder.py # Pillow/MoviePy Fallback
+│   │   ├── tts\
+│   │   │   └── tts_manager.py    # Sub-service request Router
+│   │   └── llm\
+│   │       └── groq_client.py    # 3-tier API Cascade Engine
+│   ├── storage\                  # Output video, mp3, pdf targets
+│   └── workers\
+│       ├── runner.py             # Parallel threaded daemon processing
+│       └── tasks\                # Discrete worker actions
+│
+└── backend\tts_service\          # Coqui-TTS Microservice
+    ├── main_tts.py               # Local FastAPI inference node
+    └── tts_venv\                 # Independent Python Environment
 ```
 
-## Key Design Choices
+---
 
-- Non-blocking APIs: backend writes job metadata + enqueues in Redis, then returns immediately.
-- Async processing: workers execute long AI operations through Celery.
-- Parallel fan-out:
-  - Lecture: per-slide TTS in parallel + PPT in parallel.
-  - Podcast: per-turn audio synthesis in parallel.
-- Progressive updates: workers update MongoDB status as `partial` before final completion.
-- Caching:
-  - AI engine caches lecture slides, podcast dialogue, and flashcards in Redis.
-  - Embedding module supports FAISS index persistence under `storage/vector_store/`.
-- Fallback-ready modules:
-  - LLM fallback client in `ai-engine/llm/fallback_client.py`
-  - TTS fallback chain in `ai-engine/tts/fallback_tts.py`
+## 🛠 Installation & Local Setup (Windows)
 
-## API Endpoints
+Because of explicit `NumPy` constraints between the newest version of `Manim` and the older ML logic of `Coqui-TTS`, you **must** use two distinct Virtual Environments.
 
-Auth:
-
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-
-Protected jobs:
-
-- `POST /api/upload-pdf`
-- `POST /api/generate-lecture`
-- `GET /api/lecture/:id`
-- `POST /api/generate-podcast`
-- `POST /api/generate-flashcards`
-
-All generation APIs return:
-
-- `job_id`
-- `status` (`pending`, `partial`, `complete`)
-
-## Local Setup
-
-### 1) Prerequisites
-
-- Node.js 20+
-- Python 3.11+
-- Docker + Docker Compose (recommended)
-
-### 2) Environment
-
-```bash
-cp .env.example .env
-```
-
-Set real secrets for production usage (`JWT_SECRET`, API keys).
-
-### 3) Run with Docker Compose
-
-```bash
-docker compose up --build
-```
-
-Services:
-
-- Backend: `http://localhost:4000`
-- AI Engine: `http://localhost:8000`
-- Frontend: run locally from `frontend/` (or add it to compose)
-
-### 4) Frontend (local)
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### 5) Backend (local)
-
-```bash
+### 1. Primary Backend setup (`backend\`)
+```powershell
 cd backend
-npm install
-npm run dev
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-### 6) AI Engine (local)
+### 2. TTS Microservice setup (`backend\tts_service\`)
+```powershell
+cd backend\tts_service
+python -m venv tts_venv
+.\tts_venv\Scripts\activate
+pip install -r requirements_tts.txt
+```
 
-```bash
-cd ai-engine
-python -m venv .venv
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+---
+
+## 📡 Environment Variables
+
+Create `.env` inside `backend/` and supply your **3 separate Groq API keys** to distribute your daily rate-limit quotas:
+
+```env
+# Database Hooks
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/aiguruji
+REDIS_URL=https://rare-dog-80406.upstash.io
+
+# Groq API Nodes
+GROQ_API_KEY_CLASS=gsk_YOUR_FIRST_KEY
+GROQ_API_KEY_PODCAST=gsk_YOUR_SECOND_KEY
+GROQ_API_KEY_VIDEO=gsk_YOUR_THIRD_KEY
+
+# Models
+GROQ_MODEL=llama-3.1-8b-instant
+GROQ_FALLBACK_MODEL=llama-3.3-70b-versatile
+GROQ_FALLBACK_MODEL_2=meta-llama/llama-4-scout-17b-16e-instruct
+```
+
+---
+
+## 🚀 Running the System
+
+You must start both the Primary Node and the TTS Sub-Node independently.
+
+**Terminal 1: TTS Inference Engine**
+```powershell
+cd backend\tts_service
+.\tts_venv\Scripts\activate
+uvicorn main_tts:app --port 8001
+```
+
+**Terminal 2: Core Backend**
+```powershell
+cd backend
+.\venv\Scripts\activate
 uvicorn main:app --reload --port 8000
 ```
-
-### 7) Workers (local)
-
-```bash
-cd workers
-python -m venv .venv
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-celery -A celery_app.celery_app worker -l info -Q lecture,podcast,ppt,flashcards
-python dispatcher.py
-```
-
-Run worker and dispatcher in separate terminals in local development.
-
-## Example Request Flow
-
-### Lecture generation (non-blocking)
-
-1. Frontend calls `POST /api/generate-lecture` with `pdf_url` and title.
-2. Backend creates Mongo job record (`pending`) and pushes to Redis `jobs:lecture`.
-3. Dispatcher pops queue message and sends Celery task to `lecture_worker.process_lecture_job`.
-4. Worker calls AI engine to generate slides and writes `partial` output immediately.
-5. Worker fans out slide-level TTS tasks in parallel and triggers PPT generation in parallel.
-6. Completion markers are merged and final status becomes `complete`.
-7. Frontend polls `GET /api/lecture/:id` and progressively renders slides/audio.
-
-### Podcast generation (streaming style)
-
-1. Backend enqueues podcast job and returns `job_id` immediately.
-2. Worker requests dialogue from AI engine and stores it as `partial`.
-3. Worker fans out per-turn TTS tasks in parallel.
-4. Frontend can start with dialogue instantly and progressively load turn audio URLs.
-
-## Production Hardening Checklist
-
-- Replace local storage with S3-compatible bucket + signed URLs.
-- Add structured logs and distributed tracing (OpenTelemetry).
-- Add idempotency keys for generation endpoints.
-- Add per-user rate limits and abuse protection.
-- Introduce API gateway and service-level mTLS.
-- Add CI checks, tests, and container scanning.
-- Tune Redis and Celery worker concurrency per pipeline type.
-
-## Notes
-
-This scaffold is intentionally modular and ready for provider-specific integrations.
-AI logic is isolated from backend; backend remains a fast orchestration API.

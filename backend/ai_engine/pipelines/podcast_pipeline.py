@@ -1,4 +1,4 @@
-from ai_engine.llm.groq_client import generate_json_from_groq
+from ai_engine.llm.groq_client import generate_podcast_completion
 from ai_engine.llm.prompts import PODCAST_SYSTEM_PROMPT
 from ai_engine.chunking.script_chunker import chunk_podcast_script
 from storage.local_storage import save_json
@@ -27,10 +27,10 @@ def run_podcast_pipeline(job_id: str, topic: str, pdf_url: str = None):
             context = ""
             for page in doc:
                 context += page.get_text() + "\n"
-            user_prompt += f"\n\nSource material context:\n{context[:5000]}"
+            user_prompt += f"\n\nSource material context:\n{context[:2000]}"
         except Exception as e:
             logger.error(f"Failed to natively process PDF context: {e}")
-    raw_json = generate_json_from_groq(PODCAST_SYSTEM_PROMPT, user_prompt, temperature=0.3)
+    raw_json = generate_podcast_completion(PODCAST_SYSTEM_PROMPT, user_prompt, temperature=0.3)
     
     try:
         validated = PodcastOutput(**raw_json)
