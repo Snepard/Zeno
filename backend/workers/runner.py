@@ -13,10 +13,10 @@ from ai_engine.tts.tts_manager import generate_audio_manager
 logger = logging.getLogger(__name__)
 
 
-def _run_ppt(job_id: str, topic: str):
+def _run_ppt(job_id: str, topic: str, pdf_url: str = None):
     try:
         update_job(job_id, status="processing", progress=10)
-        pipeline_output = run_ppt_pipeline(job_id, topic)
+        pipeline_output = run_ppt_pipeline(job_id, topic, pdf_url)
         update_job(job_id, status="processing", progress=60,
                    result={"topic": topic, "script": pipeline_output["script"]})
 
@@ -26,7 +26,7 @@ def _run_ppt(job_id: str, topic: str):
         for i, slide in enumerate(slides):
             try:
                 text = slide.get("explanation") or slide.get("content", "")
-                audio_path = generate_audio_manager(job_id, slide["slide_no"], text)
+                audio_path = generate_audio_manager(text, job_id, f"slide_{slide['slide_no']}.mp3")
                 slide["audio_url"] = f"/storage/{job_id}/audio/slide_{slide['slide_no']}.mp3"
             except Exception as ae:
                 logger.warning(f"Audio failed for slide {slide.get('slide_no')}: {ae}")
@@ -43,10 +43,10 @@ def _run_ppt(job_id: str, topic: str):
         update_job(job_id, status="failed", error=str(e))
 
 
-def _run_podcast(job_id: str, topic: str):
+def _run_podcast(job_id: str, topic: str, pdf_url: str = None):
     try:
         update_job(job_id, status="processing", progress=10)
-        pipeline_output = run_podcast_pipeline(job_id, topic)
+        pipeline_output = run_podcast_pipeline(job_id, topic, pdf_url)
         update_job(job_id, status="processing", progress=60,
                    result={"topic": topic, "script": pipeline_output["script"]})
 
@@ -55,7 +55,7 @@ def _run_podcast(job_id: str, topic: str):
         for i, turn in enumerate(dialogue):
             try:
                 text = turn.get("text", "")
-                generate_audio_manager(job_id, i + 1, text)
+                generate_audio_manager(text, job_id, f"slide_{i + 1}.mp3")
                 turn["audio_url"] = f"/storage/{job_id}/audio/slide_{i + 1}.mp3"
             except Exception as ae:
                 logger.warning(f"Audio failed for turn {i+1}: {ae}")
@@ -71,9 +71,9 @@ def _run_podcast(job_id: str, topic: str):
         update_job(job_id, status="failed", error=str(e))
 
 
-def dispatch_job(job_id: str, job_type: str, topic: str):
+def dispatch_job(job_id: str, job_type: str, topic: str, pdf_url: str = None):
     """Fire-and-forget: spawn a daemon thread for the job."""
     target = _run_ppt if job_type == "ppt" else _run_podcast
-    t = threading.Thread(target=target, args=(job_id, topic), daemon=True)
+    t = threading.Thread(target=target, args=(job_id, topic, pdf_url), daemon=True)
     t.start()
     logger.info(f"Dispatched {job_type} job {job_id} to background thread.")

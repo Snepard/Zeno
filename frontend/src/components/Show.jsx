@@ -22,18 +22,18 @@ const toAssetUrl = (assetPath) => {
 };
 
 const normalizeLecture = (payload) => {
-    const output = payload?.output || {};
+    const output = payload?.result?.script || payload?.script || payload?.output || {};
     const slides = (output.slides || []).map((slide) => ({
-        heading: slide.title || `Slide ${slide.slide_number}`,
+        heading: slide.title || `Slide ${slide.slide_no || slide.slide_number || 1}`,
         summary: (slide.bullets || []).join(' '),
         important_points: slide.bullets || [],
-        script: slide.speaker_notes || '',
-        audio_url: output[`audio_slide_${slide.slide_number}`] || null,
+        script: slide.explanation || slide.speaker_notes || '',
+        audio_url: slide.audio_url || null,
         slide_url: slide.slide_url || null,
     }));
 
     return {
-        lecture_title: output.title || payload?.job_id || 'Lecture',
+        lecture_title: payload?.result?.topic || output.title || payload?.job_id || 'Lecture',
         slides,
     };
 };
@@ -75,7 +75,10 @@ function Show() {
                 return;
             }
             try {
-                const response = await axios.get(`${API_BASE}/lecture/${lectureId}`);
+                const token = localStorage.getItem('access_token');
+                const response = await axios.get(`${API_BASE}/job/${lectureId}`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
                 if (response.data) {
                     setLectureData(normalizeLecture(response.data));
                     setLoading(false);

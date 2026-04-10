@@ -15,10 +15,21 @@ class PodcastOutput(BaseModel):
     topic: str
     dialogue: list[DialogueLine]
 
-def run_podcast_pipeline(job_id: str, topic: str):
+def run_podcast_pipeline(job_id: str, topic: str, pdf_url: str = None):
     logger.info(f"Executing Groq-powered Podcast dialogue pipeline sequence mapping inside job {job_id}")
     
     user_prompt = f"Create a podcast script exploring natively mapping core components targeting topic: '{topic}'"
+    
+    if pdf_url:
+        try:
+            import fitz 
+            doc = fitz.open(pdf_url)
+            context = ""
+            for page in doc:
+                context += page.get_text() + "\n"
+            user_prompt += f"\n\nSource material context:\n{context[:5000]}"
+        except Exception as e:
+            logger.error(f"Failed to natively process PDF context: {e}")
     raw_json = generate_json_from_groq(PODCAST_SYSTEM_PROMPT, user_prompt, temperature=0.3)
     
     try:

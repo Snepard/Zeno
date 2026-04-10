@@ -10,7 +10,7 @@ REQUIRED JSON FORMAT:
     {
       "slide_no": 1,
       "title": "string",
-      "content": "bullet points (concise max 4)",
+      "bullets": ["point 1", "point 2"],
       "explanation": "Detailed explanation that the speaker will talk about during this slide.",
       "keywords": ["keyword1", "keyword2"]
     }

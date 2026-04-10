@@ -20,19 +20,10 @@ const toAssetUrl = (assetPath) => {
 };
 
 const normalizeLecture = (payload) => {
-    const output = payload?.output || {};
-    const slides = (output.slides || []).map((slide) => ({
-        heading: slide.title || `Slide ${slide.slide_number}`,
-        summary: (slide.bullets || []).join(' '),
-        important_points: slide.bullets || [],
-        script: slide.speaker_notes || '',
-        audio_url: output[`audio_slide_${slide.slide_number}`] || null,
-        slide_url: slide.slide_url || null,
-    }));
-
+    const output = payload?.result?.script || payload?.script || {};
     return {
-        lecture_title: output.title || payload?.job_id || 'Lecture',
-        slides,
+        lecture_title: payload?.result?.topic || output.topic || payload?.job_id || 'Podcast',
+        dialogue: output.dialogue || [],
     };
 };
 
@@ -41,17 +32,14 @@ function Podcast() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // State
     const [lectureData, setLectureData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+    const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [playTick, setPlayTick] = useState(0); // Triggers re-renders/updates for Ziva
+    const [playTick, setPlayTick] = useState(0);
     const [isStarted, setIsStarted] = useState(false);
 
     // Podcast States
-    const [podcastData, setPodcastData] = useState({}); // { slideIndex: podcastResponseData }
-    const [isGeneratingPodcast, setIsGeneratingPodcast] = useState(false);
     const [activeSpeaker, setActiveSpeaker] = useState("ZIVA");
     const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
     const [isSpeedOpen, setIsSpeedOpen] = useState(false);
@@ -74,7 +62,10 @@ function Podcast() {
                 return;
             }
             try {
-                const response = await axios.get(`${API_BASE}/lecture/${lectureId}`);
+                const token = localStorage.getItem('access_token');
+                const response = await axios.get(`${API_BASE}/job/${lectureId}`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
                 if (response.data) {
                     setLectureData(normalizeLecture(response.data));
                     setLoading(false);
@@ -95,41 +86,40 @@ function Podcast() {
     }, [lectureId, navigate]);
 
     // Derived State
-    const slides = lectureData?.slides || [];
-    const currentSlide = slides[currentSlideIndex];
+    const dialogue = lectureData?.dialogue || [];
+    const currentTurn = dialogue[currentTurnIndex];
 
     // 2. Audio & Auto-Advance Logic
     useEffect(() => {
-        if (!currentSlide) return;
+        if (!currentTurn) return;
 
         const handleAudioEnd = () => {
-            // If podcast ended, stay or auto advance if you prefer
-            setIsPlaying(false);
+            if (currentTurnIndex < dialogue.length - 1) {
+                setCurrentTurnIndex(prev => prev + 1);
+            } else {
+                setIsPlaying(false);
+            }
         };
 
         const setupAudio = async () => {
-            let audioUrl = currentSlide.audio_url
-                ? toAssetUrl(currentSlide.audio_url)
-                : '/sample.mp3';
-
-            const pData = podcastData[currentSlideIndex];
-            if (pData?.audio_url) {
-                audioUrl = toAssetUrl(pData.audio_url);
+            if (currentTurn.speaker) {
+                setActiveSpeaker(currentTurn.speaker.toUpperCase());
             }
 
+            let audioUrl = currentTurn.audio_url ? toAssetUrl(currentTurn.audio_url) : null;
+
             if (audioUrl) {
-                console.log("▶️ Playing Audio:", audioUrl);
+                console.log("▶️ Playing Audio Turn:", audioUrl);
                 audioRef.current.src = audioUrl;
                 audioRef.current.addEventListener('ended', handleAudioEnd);
 
-                // If it was already playing, start the new track immediately
                 if (isPlaying) {
                     audioRef.current.playbackRate = playbackSpeed;
                     try {
                         const playPromise = audioRef.current.play();
                         if (playPromise !== undefined) {
                             playPromise.then(() => {
-                                setPlayTick(t => t + 1); // Notify Avatar
+                                setPlayTick(t => t + 1);
                             }).catch(e => {
                                 console.error("Autoplay blocked or failed:", e);
                                 setIsPlaying(false);
@@ -149,7 +139,7 @@ function Podcast() {
             audioRef.current.pause();
         };
 
-    }, [currentSlide, currentSlideIndex, slides.length, podcastData]);
+    }, [currentTurn, currentTurnIndex, dialogue.length]);
 
     // Active Speaker Sync & Audio Progress Loop
     const transcriptRef = useRef(null);
@@ -183,21 +173,13 @@ function Podcast() {
                 const el = transcriptRef.current;
                 const scrollableDistance = el.scrollHeight - el.clientHeight;
                 if (scrollableDistance > 0) {
-                    el.scrollTop = (currentProgress / 100) * scrollableDistance;
-                }
-            }
-
-            const pData = podcastData[currentSlideIndex];
-            if (pData && pData.timings) {
-                const currentTiming = pData.timings.find(t => currentTime >= t.start && currentTime <= t.end);
-                if (currentTiming) {
-                    setActiveSpeaker(currentTiming.speaker.toUpperCase());
+                    el.scrollTop = (currentTurnIndex / Math.max(1, dialogue.length - 1)) * scrollableDistance;
                 }
             }
         }, 100);
 
         return () => clearInterval(interval);
-    }, [isPlaying, podcastData, currentSlideIndex]);
+    }, [isPlaying, dialogue.length, currentTurnIndex]);
 
     // Handle Play/Pause toggle in current slide
     useEffect(() => {
@@ -209,52 +191,18 @@ function Podcast() {
     }, [isPlaying]);
 
     const handleNext = () => {
-        if (currentSlideIndex < slides.length - 1) {
-            setCurrentSlideIndex(prev => prev + 1);
-            setIsPlaying(true); // Keep playing
-        }
-    };
-
-    const handlePrev = () => {
-        if (currentSlideIndex > 0) {
-            setCurrentSlideIndex(prev => prev - 1);
+        if (currentTurnIndex < dialogue.length - 1) {
+            setCurrentTurnIndex(prev => prev + 1);
             setIsPlaying(true);
         }
     };
 
-    // Auto-generate ALL podcast data upfront
-    const hasGeneratedAllRef = useRef(false);
-    useEffect(() => {
-        if (!slides || slides.length === 0) return;
-        if (hasGeneratedAllRef.current || isGeneratingPodcast) return;
-
-        const generateAll = async () => {
-            setIsGeneratingPodcast(true);
-            hasGeneratedAllRef.current = true;
-            try {
-                let newData = { ...podcastData };
-                for (let i = 0; i < slides.length; i++) {
-                    if (newData[i]) continue;
-                    const slide = slides[i];
-                    const content = slide.summary + " " + (slide.important_points?.join(" ") || "") + " " + slide.script;
-                    const response = MOCK_MODE
-                        ? { data: createMockPodcast(content, i) }
-                        : await axios.post(`${API_BASE}/generate-podcast`, {
-                            slide_content: content
-                        });
-                    newData = { ...newData, [i]: response.data };
-                    // Set it progressively so UI is aware of background progress if needed
-                    setPodcastData(newData);
-                }
-            } catch (err) {
-                console.error("Failed to generate whole podcast", err);
-            } finally {
-                setIsGeneratingPodcast(false);
-            }
-        };
-
-        generateAll();
-    }, [slides]);
+    const handlePrev = () => {
+        if (currentTurnIndex > 0) {
+            setCurrentTurnIndex(prev => prev - 1);
+            setIsPlaying(true);
+        }
+    };
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
@@ -292,30 +240,18 @@ function Podcast() {
                         style={{ fontFamily: '"Wendy One", sans-serif' }}
                     />
                     <p className="text-xl text-slate-400 mb-12 max-w-2xl">
-                        Your AI teacher is ready. Click below to enter the classroom and start the session.
+                        Your AI Podcast hosts are ready. Click below to enter the studio and start the session.
                     </p>
-                    {isGeneratingPodcast || Object.keys(podcastData).length < slides.length ? (
-                        <div className="flex flex-col items-center gap-5 my-4">
-                            <Loader className="w-12 h-12 animate-spin text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
-                            <p className="text-xl text-purple-400 font-semibold animate-pulse tracking-wide">
-                                Podcast is under generation, it may take 3-5 mints
-                            </p>
-                            <p className="text-sm text-purple-400/60">
-                                ({Object.keys(podcastData).length}/{slides.length} slides generated)
-                            </p>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={async () => {
-                                setIsStarted(true);
-                                setTimeout(() => setIsPlaying(true), 300);
-                            }}
-                            className="group relative px-8 py-4 bg-purple-500 border-[3px] border-purple-700 hover:bg-purple-400 hover:border-purple-600 text-white rounded-full text-xl font-bold transition-all hover:scale-105 shadow-[0_0_80px_rgba(168,85,247,0.6)] flex items-center gap-3"
-                        >
-                            <Play className="w-6 h-6 fill-current" />
-                            Start Class
-                        </button>
-                    )}
+                    <button
+                        onClick={async () => {
+                            setIsStarted(true);
+                            setTimeout(() => setIsPlaying(true), 300);
+                        }}
+                        className="group relative px-8 py-4 bg-purple-500 border-[3px] border-purple-700 hover:bg-purple-400 hover:border-purple-600 text-white rounded-full text-xl font-bold transition-all hover:scale-105 shadow-[0_0_80px_rgba(168,85,247,0.6)] flex items-center gap-3"
+                    >
+                        <Play className="w-6 h-6 fill-current" />
+                        Enter Studio
+                    </button>
                 </div>
             </div>
         )
@@ -333,10 +269,7 @@ function Podcast() {
                 </button>
 
                 <div className="bg-black/40 px-4 py-1.5 rounded-xl flex items-center gap-2 border border-white/10 shadow-lg">
-                    {isGeneratingPodcast && <Loader className="w-4 h-4 animate-spin text-purple-400" />}
-                    <span className="text-sm font-bold text-white/90">
-                        {isGeneratingPodcast ? 'Generating Audio...' : 'Podcast Mode'}
-                    </span>
+                    <span className="text-sm font-bold text-white/90">Podcast Mode</span>
                 </div>
             </div>
 
@@ -494,8 +427,8 @@ function Podcast() {
                                             </div>
                                         </div>
 
-                                        <button onClick={handleNext} className="text-white/60 hover:text-white transition flex items-center font-semibold gap-1.5 focus:outline-none text-sm tracking-wide" disabled={currentSlideIndex === slides.length - 1}>
-                                            Next Slide <SkipForward className="w-4 h-4" />
+                                        <button onClick={handleNext} className="text-white/60 hover:text-white transition flex items-center font-semibold gap-1.5 focus:outline-none text-sm tracking-wide" disabled={currentTurnIndex === dialogue.length - 1}>
+                                            Next Turn <SkipForward className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
@@ -512,8 +445,8 @@ function Podcast() {
                                     Live Transcript
                                 </h3>
                                 <div ref={transcriptRef} className={`flex-1 ${isPlaying ? 'overflow-y-hidden' : 'overflow-y-auto'} custom-scrollbar pr-4 space-y-6`}>
-                                    {podcastData[currentSlideIndex]?.dialogue?.map((turn, i) => {
-                                        const isSpeakerActive = activeSpeaker === turn.speaker.toUpperCase() && isPlaying;
+                                    {dialogue.map((turn, i) => {
+                                        const isSpeakerActive = i === currentTurnIndex;
                                         const isZiva = turn.speaker.toUpperCase() === 'ZIVA';
 
                                         return (

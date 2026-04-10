@@ -6,14 +6,13 @@ import json
 import uuid
 import threading
 from pathlib import Path
-from passlib.context import CryptContext
+import bcrypt
 
 STORAGE_DIR = Path("storage")
 STORAGE_DIR.mkdir(exist_ok=True)
 USERS_FILE = STORAGE_DIR / "users.json"
 
 _lock = threading.Lock()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def _load() -> dict:
@@ -54,7 +53,7 @@ def create_user(email: str, password: str, full_name: str = "") -> dict:
         "id": user_id,
         "email": email,
         "full_name": full_name,
-        "hashed_password": pwd_context.hash(password),
+        "hashed_password": bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
     }
     with _lock:
         users = _load()
@@ -64,4 +63,7 @@ def create_user(email: str, password: str, full_name: str = "") -> dict:
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    except ValueError:
+        return False

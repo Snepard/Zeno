@@ -13,7 +13,7 @@ import SignUp from './components/SignUp';
 import LandingPage from './components/LandingPage';
 import { DEMO_LECTURE_ID, MOCK_MODE } from './config/mock';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:4000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 const MemoizedFloatingLines = React.memo(() => (
     <FloatingLines
@@ -36,6 +36,9 @@ function App() {
     const [ingestionData, setIngestionData] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [generationComplete, setGenerationComplete] = useState(false);
+    const [completedJobId, setCompletedJobId] = useState(null);
+    const [completedMode, setCompletedMode] = useState(null);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
@@ -77,7 +80,7 @@ function App() {
 
         try {
             const response = await axios.post(
-                `${API_BASE}/upload-pdf`,
+                `${API_BASE}/generate/upload-pdf`,
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
@@ -92,61 +95,72 @@ function App() {
 
     const handleGenerate = async (mode = 'slides') => {
         setIsGenerating(true);
-        setProgress(10);
-
-        progressIntervalRef.current = setInterval(() => {
-            setProgress((prev) => (prev >= 90 ? 90 : prev + 5));
-        }, 1000);
+        setProgress(5);
 
         if (MOCK_MODE) {
+            progressIntervalRef.current = setInterval(() => {
+                setProgress((prev) => (prev >= 90 ? 90 : prev + 5));
+            }, 1000);
+
             setTimeout(() => {
                 clearInterval(progressIntervalRef.current);
                 setProgress(100);
                 setIsGenerating(false);
-
-                if (mode === 'podcast') {
-                    navigate(`/podcast/${DEMO_LECTURE_ID}`, {
-                        state: { initialMode: 'podcast' }
-                    });
-                } else {
-                    navigate(`/show/${DEMO_LECTURE_ID}`);
-                }
-            }, 1200);
+                setGenerationComplete(true);
+                setCompletedJobId(DEMO_LECTURE_ID);
+                setCompletedMode(mode);
+            }, 2500);
             return;
         }
 
         try {
+            const endpoint = mode === 'podcast' ? 'podcast' : 'ppt';
             const response = await axios.post(
-                `${API_BASE}/generate-lecture`,
+                `${API_BASE}/generate/${endpoint}`,
                 {
                     pdf_url: ingestionData?.pdf_url,
-                    title: file?.name || 'AI Lecture'
+                    topic: file?.name || 'AI Lecture'
                 },
                 { timeout: 300000 }
             );
 
-            clearInterval(progressIntervalRef.current);
-            setProgress(100);
+            const jobId = response.data.job_id || response.data.lecture_id;
 
-            const lectureId = response.data.job_id || response.data.lecture_id;
-
-            setTimeout(() => {
-                setIsGenerating(false);
-
-                if (mode === 'podcast') {
-                    navigate(`/podcast/${lectureId}`, {
-                        state: { initialMode: 'podcast' }
+            const token = localStorage.getItem('access_token');
+            const pollInterval = setInterval(async () => {
+                try {
+                    const statusRes = await axios.get(`${API_BASE}/job/${jobId}`, {
+                        headers: token ? { Authorization: `Bearer ${token}` } : {}
                     });
-                } else {
-                    navigate(`/show/${lectureId}`);
+                    const job = statusRes.data;
+                    
+                    setProgress(job.progress || 10);
+
+                    if (job.status === "completed") {
+                        clearInterval(pollInterval);
+                        setTimeout(() => {
+                            setIsGenerating(false);
+                            setGenerationComplete(true);
+                            setCompletedJobId(jobId);
+                            setCompletedMode(mode);
+                        }, 500);
+                    } else if (job.status === "failed") {
+                        clearInterval(pollInterval);
+                        setIsGenerating(false);
+                        setProgress(0);
+                        alert("Generation failed: " + (job.error || "Unknown backend error"));
+                    }
+                } catch (e) {
+                    console.error("Polling error", e);
                 }
-            }, 500);
+            }, 2000);
+            progressIntervalRef.current = pollInterval;
+
         } catch (error) {
-            console.error("Generation failed:", error);
-            clearInterval(progressIntervalRef.current);
+            console.error("Generation dispatch failed:", error);
             setIsGenerating(false);
             setProgress(0);
-            alert("Failed to generate lecture. Please try again.");
+            alert("Failed to initialize lecture generation. Please verify backend.");
         }
     };
 
@@ -262,6 +276,29 @@ function App() {
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                ) : generationComplete ? (
+                                    <div className="flex flex-col items-center justify-center h-full gap-6 animate-fade-in">
+                                        <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center border-2 border-green-500/50 mb-2">
+                                            <CheckCircle className="w-10 h-10 text-green-400" />
+                                        </div>
+                                        <h3 className="text-white text-2xl font-bold tracking-wide">Processing Complete</h3>
+                                        <p className="text-slate-400 text-center max-w-sm mb-4">
+                                            Your lecture has been fully generated natively with speech, transcription, and slides.
+                                        </p>
+                                        <button
+                                            onClick={() => {
+                                                if (completedMode === 'podcast') {
+                                                    navigate(`/podcast/${completedJobId}`, { state: { initialMode: 'podcast' } });
+                                                } else {
+                                                    navigate(`/show/${completedJobId}`);
+                                                }
+                                            }}
+                                            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-full text-[17px] font-bold transition-all hover:scale-105 shadow-[0_0_40px_rgba(168,85,247,0.4)] flex items-center gap-3 w-full max-w-sm justify-center"
+                                        >
+                                            <PlayCircle className="w-6 h-6" />
+                                            Enter Classroom
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-4 w-full">

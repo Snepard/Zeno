@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 import jwt
 from datetime import datetime, timedelta
@@ -22,6 +21,11 @@ class UserCreate(BaseModel):
     full_name: str = ""
 
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -31,14 +35,21 @@ class Token(BaseModel):
 async def register(user_in: UserCreate):
     try:
         user = create_user(user_in.email, user_in.password, user_in.full_name)
-        return {"id": user["id"], "email": user["email"], "full_name": user["full_name"]}
+        token = _make_token(user["id"])
+        return {
+            "id": user["id"],
+            "email": user["email"],
+            "full_name": user["full_name"],
+            "access_token": token,
+            "token_type": "bearer",
+        }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = get_user_by_email(form_data.username)
-    if not user or not verify_password(form_data.password, user["hashed_password"]):
+async def login(login_data: LoginRequest):
+    user = get_user_by_email(login_data.email)
+    if not user or not verify_password(login_data.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     return {"access_token": _make_token(user["id"]), "token_type": "bearer"}

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class SlideOutput(BaseModel):
     slide_no: int
     title: str
-    content: str
+    bullets: list[str]
     explanation: str
     keywords: list[str]
 
@@ -19,11 +19,22 @@ class PPTOutput(BaseModel):
     topic: str
     slides: list[SlideOutput]
 
-def run_ppt_pipeline(job_id: str, topic: str):
+def run_ppt_pipeline(job_id: str, topic: str, pdf_url: str = None):
     logger.info(f"Executing Groq-powered native LLM PPT generation pipeline inside job {job_id}")
     
     # 1. Engage Groq explicitly leveraging optimization variables correctly
     user_prompt = f"Create a detailed presentation on the core topic: '{topic}'"
+    
+    if pdf_url:
+        try:
+            import fitz 
+            doc = fitz.open(pdf_url)
+            context = ""
+            for page in doc:
+                context += page.get_text() + "\n"
+            user_prompt += f"\n\nSource material context:\n{context[:5000]}"
+        except Exception as e:
+            logger.error(f"Failed to natively process PDF context: {e}")
     raw_json = generate_json_from_groq(PPT_SYSTEM_PROMPT, user_prompt, temperature=0.3)
     
     # 2. Re-Validate fully through Pydantic ensuring downstream safety
