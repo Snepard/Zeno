@@ -179,11 +179,9 @@ function App() {
                     
                     <div className="mb-8 text-center flex flex-col items-center">
                         <div className="relative mb-4">
-                            <img 
-                                src="/AiGLogo.png" 
-                                alt="AI Guruji Logo" 
-                                className="h-[4.5rem] w-auto object-contain rounded-xl relative z-0"
-                            />
+                            <div className="h-[4.5rem] px-6 rounded-xl relative z-0 bg-white/10 border border-white/20 flex items-center justify-center">
+                                <span className="text-3xl font-bold tracking-wide text-white">Zeno</span>
+                            </div>
                             {/* Front-facing glow overlay */}
                             <div className="absolute inset-0 z-10 bg-purple-500/20 mix-blend-screen pointer-events-none rounded-xl blur-[12px] animate-pulse" />
                         </div>

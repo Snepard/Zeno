@@ -69,7 +69,7 @@ const HeroSection = () => (
                                 boxShadow: '0 0 20px rgba(147, 51, 234, 0.5)'
                             }}
                         />
-                        <span style={{ position: 'relative', zIndex: 2, fontFamily: '"Lobster", cursive', fontWeight: 'normal', fontStyle: 'normal', color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>AI-GURUJI</span>
+                        <span style={{ position: 'relative', zIndex: 2, fontFamily: '"Lobster", cursive', fontWeight: 'normal', fontStyle: 'normal', color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>Zeno</span>
                     </span>
                 </motion.h1>
           <p className="text-lg text-gray-300 mb-8 max-w-lg mx-auto md:mx-0">
@@ -84,7 +84,7 @@ const HeroSection = () => (
         <div className="flex justify-center">
           <img 
             src="/homechar.png"
-            alt="AI Guruji Character" 
+            alt="Zeno Character" 
             className="w-full h-auto object-contain max-w-lg drop-shadow-2xl"
           />
         </div>
@@ -107,7 +107,7 @@ const FeaturesSection = () => {
                     <div className="lg:w-1/2 text-center lg:text-left">
                         <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">Everything You Need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Ace Your Studies</span></h2>
                         <p className="text-xl text-gray-400 leading-relaxed">
-                            AI Guruji combines advanced document processing with cutting-edge generative models to give you the ultimate learning advantage. Swap out dense materials for engaging multimedia formats instantly.
+                            Zeno combines advanced document processing with cutting-edge generative models to give you the ultimate learning advantage. Swap out dense materials for engaging multimedia formats instantly.
                         </p>
                     </div>
 
@@ -150,15 +150,15 @@ const FeaturesSection = () => {
 
 const faqData = [
     {
-        question: "How does AI Guruji's AI presentation generator work?",
-        answer: "AI Guruji uses advanced AI algorithms to analyze your PDF documents and automatically creates professional visual lectures with smart slide layouts, virtual teachers, and engaging dual-host podcasts."
+        question: "How does Zeno's AI presentation generator work?",
+        answer: "Zeno uses advanced AI algorithms to analyze your PDF documents and automatically creates professional visual lectures with smart slide layouts, virtual teachers, and engaging dual-host podcasts."
     },
     {
-        question: "What file formats does AI Guruji accept?",
+        question: "What file formats does Zeno accept?",
         answer: "Currently, we specialize in high-fidelity extraction from PDF documents. Ensure your PDFs have clear, extractable text for the best results."
     },
     {
-        question: "Is AI Guruji suitable for both teachers and students?",
+        question: "Is Zeno suitable for both teachers and students?",
         answer: "Absolutely! Teachers can use it to create interactive materials and virtual lectures, while students can generate custom study guides or listen to podcast-style summaries of their course material."
     },
     {
@@ -166,7 +166,7 @@ const faqData = [
         answer: "Visual lectures create an interactive presentation deck guided by a 3D virtual teacher. Podcasts generate a conversational, audio-only experience between two AI hosts discussing the subject matter."
     },
     {
-        question: "How secure is my educational data on AI Guruji?",
+        question: "How secure is my educational data on Zeno?",
         answer: "We prioritize your privacy and security. All uploaded documents and generated content are encrypted securely. We never use your personal data or institutional materials to train our base AI models."
     }
 ];
@@ -261,7 +261,7 @@ const FAQSection = () => {
                         >
                             <img
                                 src="/faq.png"
-                                alt="AI Guruji FAQ Illustration"
+                                alt="Zeno FAQ Illustration"
                                 style={{
                                     width: '100%',
                                     height: 'auto',
@@ -300,14 +300,14 @@ const FAQSection = () => {
                                 marginBottom: '1rem',
                                 lineHeight: 1.2
                             }}>
-                                Questions about AI Guruji?
+                                Questions about Zeno?
                             </h2>
                             <p style={{
                                 fontSize: '1.1rem',
                                 color: '#9ca3af',
                                 lineHeight: 1.6
                             }}>
-                                Get answers to common questions about our AI-powered platform and discover how AI Guruji can transform your teaching and learning experience.
+                                Get answers to common questions about our AI-powered platform and discover how Zeno can transform your teaching and learning experience.
                             </p>
                         </motion.div>
 
@@ -374,3 +374,5 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
+
+

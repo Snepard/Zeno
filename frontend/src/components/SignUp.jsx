@@ -227,17 +227,24 @@ const SignUp = () => {
                             custom={0} variants={itemVariants} initial="hidden" animate="visible"
                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}
                         >
-                            <img
-                                src="/AiGLogo.png"
-                                alt="AI-Guruji Logo"
+                            <div
                                 style={{
                                     height: '62px',
-                                    width: 'auto',
-                                    objectFit: 'contain',
-                                    filter: 'drop-shadow(0 0 16px rgba(155,100,250,0.5))',
+                                    minWidth: '128px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: 700,
+                                    color: '#fff',
+                                    letterSpacing: '0.06em',
                                     borderRadius: '8px',
+                                    border: '1px solid rgba(255,255,255,0.16)',
+                                    background: 'rgba(255,255,255,0.05)',
+                                    filter: 'drop-shadow(0 0 16px rgba(155,100,250,0.5))',
                                 }}
-                            />
+                            >
+                                Zeno
+                            </div>
                         </motion.div>
 
                         {/* ── Heading ── */}
@@ -257,7 +264,7 @@ const SignUp = () => {
                             custom={2} variants={itemVariants} initial="hidden" animate="visible"
                             style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.85rem', marginBottom: '1rem' }}
                         >
-                            Join AI Guruji and start learning
+                            Join Zeno and start learning
                         </motion.p>
 
                         {/* ── Error Banner ── */}
@@ -402,3 +409,5 @@ const SignUp = () => {
 };
 
 export default SignUp;
+
+

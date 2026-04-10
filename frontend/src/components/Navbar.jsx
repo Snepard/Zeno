@@ -48,7 +48,7 @@ const Navbar = () => {
         {/* Left: Logo */}
         <div className="text-xl md:text-2xl font-bold text-white tracking-wider flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/AiGLogo.png" alt="AI Guruji" className="h-10 w-auto hidden sm:block rounded-md" />
+            <span className="hidden sm:block">Zeno</span>
           </Link>
         </div>
 
@@ -83,3 +83,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

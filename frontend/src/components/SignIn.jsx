@@ -226,17 +226,24 @@ const SignIn = () => {
                             custom={0} variants={itemVariants} initial="hidden" animate="visible"
                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}
                         >
-                            <img
-                                src="/AiGLogo.png"
-                                alt="AI-Guruji Logo"
+                            <div
                                 style={{
                                     height: '70px',
-                                    width: 'auto',
-                                    objectFit: 'contain',
-                                    filter: 'drop-shadow(0 0 16px rgba(155,100,250,0.5))',
+                                    minWidth: '140px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: 700,
+                                    color: '#fff',
+                                    letterSpacing: '0.06em',
                                     borderRadius: '8px',
+                                    border: '1px solid rgba(255,255,255,0.16)',
+                                    background: 'rgba(255,255,255,0.05)',
+                                    filter: 'drop-shadow(0 0 16px rgba(155,100,250,0.5))',
                                 }}
-                            />
+                            >
+                                Zeno
+                            </div>
                         </motion.div>
 
                         {/* ── Heading ── */}
@@ -366,7 +373,7 @@ const SignIn = () => {
                                 color: 'rgba(255,255,255,0.35)',
                             }}
                         >
-                            New to AI-Guruji?{' '}
+                            New to Zeno?{' '}
                             <Link to="/signup" style={{ textDecoration: 'none' }}>
                                 <motion.span
                                     whileHover={{ color: '#9B64FA' }}
@@ -390,3 +397,5 @@ const SignIn = () => {
 };
 
 export default SignIn;
+
+
