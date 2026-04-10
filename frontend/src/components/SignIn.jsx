@@ -6,6 +6,7 @@ import Beams from './Beams';
 import Particles from './Particles';
 import DotGrid from './DotGrid';
 import { Mail, Lock, LogIn } from 'lucide-react';
+import { MOCK_MODE } from '../config/mock';
 
 // ---------- Animation Variants ----------
 const cardVariants = {
@@ -97,6 +98,17 @@ const SignIn = () => {
 
         setIsLoading(true);
         setError('');
+
+        if (MOCK_MODE) {
+            setTimeout(() => {
+                const token = 'mock-token';
+                localStorage.setItem('access_token', token);
+                axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+                setIsLoading(false);
+                navigate('/upload');
+            }, 300);
+            return;
+        }
 
         try {
             const response = await axios.post(`${API_BASE}/auth/login`, {

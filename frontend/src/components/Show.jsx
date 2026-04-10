@@ -10,6 +10,7 @@ import Plasma from './Plasma';
 import DotGrid from './DotGrid';
 import Particles from './Particles';
 import TextType from './TextType';
+import { createMockLecture, createMockPodcast, MOCK_MODE } from '../config/mock';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:4000/api';
 const ASSET_BASE = import.meta.env.VITE_ASSET_BASE || 'http://127.0.0.1:4000';
@@ -68,6 +69,11 @@ function Show() {
     useEffect(() => {
         const fetchLecture = async () => {
             if (!lectureId) return;
+            if (MOCK_MODE) {
+                setLectureData(createMockLecture(lectureId));
+                setLoading(false);
+                return;
+            }
             try {
                 const response = await axios.get(`${API_BASE}/lecture/${lectureId}`);
                 if (response.data) {
@@ -247,9 +253,11 @@ function Show() {
             setIsGeneratingPodcast(true);
             try {
                 const content = currentSlide.summary + " " + (currentSlide.important_points?.join(" ") || "") + " " + currentSlide.script;
-                const response = await axios.post(`${API_BASE}/generate-podcast`, {
-                    slide_content: content
-                });
+                const response = MOCK_MODE
+                    ? { data: createMockPodcast(content, currentSlideIndex) }
+                    : await axios.post(`${API_BASE}/generate-podcast`, {
+                        slide_content: content
+                    });
                 setPodcastData(prev => ({
                     ...prev,
                     [currentSlideIndex]: response.data
@@ -316,9 +324,11 @@ function Show() {
                             setIsGeneratingPodcast(true);
                             try {
                                 const content = slides[0].summary + " " + (slides[0].important_points?.join(" ") || "") + " " + slides[0].script;
-                                const response = await axios.post(`${API_BASE}/generate-podcast`, {
-                                    slide_content: content
-                                });
+                                const response = MOCK_MODE
+                                    ? { data: createMockPodcast(content, 0) }
+                                    : await axios.post(`${API_BASE}/generate-podcast`, {
+                                        slide_content: content
+                                    });
                                 setPodcastData(prev => ({
                                     ...prev,
                                     [0]: response.data

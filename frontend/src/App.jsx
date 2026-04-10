@@ -11,6 +11,7 @@ import FloatingLines from './components/FloatingLines';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
 import LandingPage from './components/LandingPage';
+import { DEMO_LECTURE_ID, MOCK_MODE } from './config/mock';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:4000/api';
 
@@ -62,6 +63,17 @@ function App() {
 
         setUploadStatus("uploading");
 
+        if (MOCK_MODE) {
+            setTimeout(() => {
+                setIngestionData({
+                    pdf_url: `mock/${file.name || 'demo.pdf'}`,
+                    status: 'complete',
+                });
+                setUploadStatus("success");
+            }, 500);
+            return;
+        }
+
         const formData = new FormData();
         formData.append("pdf", file);
 
@@ -87,6 +99,23 @@ function App() {
         progressIntervalRef.current = setInterval(() => {
             setProgress((prev) => (prev >= 90 ? 90 : prev + 5));
         }, 1000);
+
+        if (MOCK_MODE) {
+            setTimeout(() => {
+                clearInterval(progressIntervalRef.current);
+                setProgress(100);
+                setIsGenerating(false);
+
+                if (mode === 'podcast') {
+                    navigate(`/podcast/${DEMO_LECTURE_ID}`, {
+                        state: { initialMode: 'podcast' }
+                    });
+                } else {
+                    navigate(`/show/${DEMO_LECTURE_ID}`);
+                }
+            }, 1200);
+            return;
+        }
 
         try {
             const response = await axios.post(

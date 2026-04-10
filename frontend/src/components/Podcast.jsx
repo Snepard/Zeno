@@ -8,6 +8,7 @@ import { Loader, Play, Pause, SkipForward, SkipBack, Mic2, Presentation, Message
 import { Zyro } from './Zyro';
 import Particles from './Particles';
 import TextType from './TextType';
+import { createMockLecture, createMockPodcast, MOCK_MODE } from '../config/mock';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:4000/api';
 const ASSET_BASE = import.meta.env.VITE_ASSET_BASE || 'http://127.0.0.1:4000';
@@ -67,6 +68,11 @@ function Podcast() {
     useEffect(() => {
         const fetchLecture = async () => {
             if (!lectureId) return;
+            if (MOCK_MODE) {
+                setLectureData(createMockLecture(lectureId));
+                setLoading(false);
+                return;
+            }
             try {
                 const response = await axios.get(`${API_BASE}/lecture/${lectureId}`);
                 if (response.data) {
@@ -231,9 +237,11 @@ function Podcast() {
                     if (newData[i]) continue;
                     const slide = slides[i];
                     const content = slide.summary + " " + (slide.important_points?.join(" ") || "") + " " + slide.script;
-                    const response = await axios.post(`${API_BASE}/generate-podcast`, {
-                        slide_content: content
-                    });
+                    const response = MOCK_MODE
+                        ? { data: createMockPodcast(content, i) }
+                        : await axios.post(`${API_BASE}/generate-podcast`, {
+                            slide_content: content
+                        });
                     newData = { ...newData, [i]: response.data };
                     // Set it progressively so UI is aware of background progress if needed
                     setPodcastData(newData);
