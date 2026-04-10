@@ -9,6 +9,7 @@ import { ReactLenis } from '@studio-freight/react-lenis';
 import CardSwap, { Card } from './CardSwap';
 import Particles from './Particles';
 import AnimatedHero from './hero/AnimatedHero';
+import { FaqBookScroller } from './FaqBookScroller';
 
 // --- SVG Icons for Features ---
 const FeatureIcon1 = () => (
@@ -41,7 +42,7 @@ const FeaturesSection = () => {
                 <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
                     {/* Left text component */}
                     <div className="lg:w-1/2 text-center lg:text-left">
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">Everything You Need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Ace Your Studies</span></h2>
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">Everything You Need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-200">Ace Your Studies</span></h2>
                         <p className="text-xl text-gray-400 leading-relaxed">
                             Zeno combines advanced document processing with cutting-edge generative models to give you the ultimate learning advantage. Swap out dense materials for engaging multimedia formats instantly.
                         </p>
@@ -84,191 +85,6 @@ const FeaturesSection = () => {
     );
 };
 
-const faqData = [
-    {
-        question: "How does Zeno's AI presentation generator work?",
-        answer: "Zeno uses advanced AI algorithms to analyze your PDF documents and automatically creates professional visual lectures with smart slide layouts, virtual teachers, and engaging dual-host podcasts."
-    },
-    {
-        question: "What file formats does Zeno accept?",
-        answer: "Currently, we specialize in high-fidelity extraction from PDF documents. Ensure your PDFs have clear, extractable text for the best results."
-    },
-    {
-        question: "Is Zeno suitable for both teachers and students?",
-        answer: "Absolutely! Teachers can use it to create interactive materials and virtual lectures, while students can generate custom study guides or listen to podcast-style summaries of their course material."
-    },
-    {
-        question: "What's the difference between visual lectures and podcasts?",
-        answer: "Visual lectures create an interactive presentation deck guided by a 3D virtual teacher. Podcasts generate a conversational, audio-only experience between two AI hosts discussing the subject matter."
-    },
-    {
-        question: "How secure is my educational data on Zeno?",
-        answer: "We prioritize your privacy and security. All uploaded documents and generated content are encrypted securely. We never use your personal data or institutional materials to train our base AI models."
-    }
-];
-
-const FAQItem = ({ faq, isOpen, onClick }) => {
-    return (
-        <div style={{ borderBottom: '1px solid #1e293b' }}>
-            <button
-                onClick={onClick}
-                style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '1.5rem 0',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    color: isOpen ? '#a855f7' : '#f8fafc',
-                    transition: 'color 0.2s',
-                    fontWeight: '600',
-                    fontSize: '1.1rem'
-                }}
-                aria-expanded={isOpen}
-            >
-                <span>{faq.question}</span>
-                {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        style={{ overflow: 'hidden' }}
-                    >
-                        <div style={{
-                            paddingBottom: '1.5rem',
-                            color: '#9ca3af',
-                            lineHeight: '1.6',
-                            fontSize: '1rem'
-                        }}>
-                            {faq.answer}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-};
-
-const FAQSection = () => {
-    const [openIndex, setOpenIndex] = useState(0);
-
-    return (
-        <section style={{ padding: '6rem 2rem 8rem', backgroundColor: 'transparent', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                <style>
-                    {`
-            .faq-container {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 4rem;
-              align-items: flex-start;
-            }
-            @media (max-width: 1024px) {
-              .faq-container {
-                grid-template-columns: 1fr;
-                gap: 3rem;
-              }
-            }
-          `}
-                </style>
-
-                <div className="faq-container">
-                    {/* Left Side - Image */}
-                    <div style={{ position: 'relative' }}>
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6 }}
-                            style={{
-                                borderRadius: '24px',
-                                overflow: 'hidden',
-                                boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-                                border: '1px solid rgba(147, 51, 234, 0.2)'
-                            }}
-                        >
-                            <img
-                                src="/faq.png"
-                                alt="Zeno FAQ Illustration"
-                                style={{
-                                    width: '100%',
-                                    height: 'auto',
-                                    display: 'block',
-                                    aspectRatio: '1/1',
-                                    objectFit: 'fill'
-                                }}
-                            />
-                        </motion.div>
-                    </div>
-
-                    {/* Right Side - FAQ Content */}
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5 }}
-                            style={{ marginBottom: '2.5rem' }}
-                        >
-                            <h3 style={{
-                                color: '#a855f7',
-                                fontWeight: '700',
-                                fontSize: '0.9rem',
-                                letterSpacing: '0.05em',
-                                textTransform: 'uppercase',
-                                marginBottom: '0.75rem'
-                            }}>
-                                FAQ's
-                            </h3>
-                            <h2 style={{
-                                fontSize: '2.5rem',
-                                fontWeight: '800',
-                                color: '#f8fafc',
-                                letterSpacing: '-0.02em',
-                                marginBottom: '1rem',
-                                lineHeight: 1.2
-                            }}>
-                                Questions about Zeno?
-                            </h2>
-                            <p style={{
-                                fontSize: '1.1rem',
-                                color: '#9ca3af',
-                                lineHeight: 1.6
-                            }}>
-                                Get answers to common questions about our AI-powered platform and discover how Zeno can transform your teaching and learning experience.
-                            </p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
-                            style={{ borderTop: '1px solid #1e293b' }}
-                        >
-                            {faqData.map((faq, index) => (
-                                <FAQItem
-                                    key={index}
-                                    faq={faq}
-                                    isOpen={openIndex === index}
-                                    onClick={() => setOpenIndex(index === openIndex ? -1 : index)}
-                                />
-                            ))}
-                        </motion.div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-};
 
 // --- Main Landing Page Component ---
 
@@ -300,7 +116,7 @@ const LandingPage = () => {
                         <HowItWorksScroller />
                     </section>
 
-                    <FAQSection />
+                    <FaqBookScroller />
                 </div>
 
                 <div className="relative z-20 bg-[#0B0A10]">

@@ -466,7 +466,7 @@ function Show() {
                             }}
                         >
                             <div 
-                                className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-400 to-purple-400 rounded-full point-events-none" 
+                                className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-purple-300 rounded-full point-events-none" 
                                 style={{ width: `${progress}%` }}
                             />
                             <div 

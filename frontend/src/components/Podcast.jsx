@@ -367,7 +367,7 @@ function Podcast() {
                                         }
                                     }}
                                 >
-                                    <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 via-pink-400 to-orange-400 rounded-full point-events-none transition-all duration-100" style={{ width: `${progress}%` }} />
+                                    <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-purple-300 rounded-full point-events-none transition-all duration-100" style={{ width: `${progress}%` }} />
                                     <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.9)] opacity-0 group-hover:opacity-100 transition-opacity point-events-none" style={{ left: `calc(${progress}% - 8px)` }} />
                                 </div>
 

@@ -127,7 +127,7 @@ const AnimatedHero = () => {
                             >
                                 Study Smarter. Score Higher.{' '}
                                 <span className="relative inline-block mt-2 md:mt-0 xl:mt-2">
-                                    <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+                                    <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-200">
                                         With Zeno
                                     </span>
                                     <motion.div
