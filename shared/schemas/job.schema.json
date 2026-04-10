@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zeno.local/schemas/job.schema.json",
+  "title": "Job",
+  "type": "object",
+  "required": ["job_id", "status", "type"],
+  "properties": {
+    "job_id": { "type": "string" },
+    "type": { "type": "string", "enum": ["lecture", "podcast", "flashcards"] },
+    "status": { "type": "string", "enum": ["pending", "partial", "complete", "failed"] },
+    "output": { "type": "object" },
+    "error": { "type": ["string", "null"] }
+  }
+}

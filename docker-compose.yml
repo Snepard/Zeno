@@ -1,0 +1,50 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+
+  mongo:
+    image: mongo:7
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      MONGODB_URI: mongodb://mongo:27017/zeno
+      AI_ENGINE_URL: http://ai-engine:8000
+    depends_on:
+      - redis
+      - mongo
+    ports:
+      - '4000:4000'
+
+  ai-engine:
+    build: ./ai-engine
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - redis
+    ports:
+      - '8000:8000'
+
+  workers:
+    build: ./workers
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      MONGODB_URI: mongodb://mongo:27017/zeno
+      AI_ENGINE_URL: http://ai-engine:8000
+    depends_on:
+      - redis
+      - ai-engine
+      - mongo
+
+volumes:
+  mongo_data:

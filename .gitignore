@@ -1,0 +1,17 @@
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+dist/
+build/
+coverage/
+.DS_Store
+*.log
+.vscode/
+storage/audio/*.mp3
+storage/slides/*.json
+storage/lectures/*.pptx
+storage/vector_store/*
+!.gitkeep
