@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
+import { useScroll, useMotionValueEvent } from 'framer-motion';
 
 // Define the content for each step with contextual online placeholders
 const steps = [
@@ -28,42 +29,26 @@ const HowItWorksScroller = () => {
   const [activeStep, setActiveStep] = useState(0);
   const containerRef = useRef(null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const container = containerRef.current;
-      if (!container) return;
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
 
-      const { top, height } = container.getBoundingClientRect();
-      const scrollableHeight = height - window.innerHeight;
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    // Determine the new step based on scroll progress (0 to 1)
+    // We have 4 steps, index 0 to 3.
+    const newStep = Math.min(
+      steps.length - 1,
+      Math.max(0, Math.round(latest * (steps.length - 1)))
+    );
 
-      // Exit if the component is not in the viewport
-      if (top > window.innerHeight || top < -height) {
-        return;
+    setActiveStep((prevStep) => {
+      if (newStep !== prevStep) {
+        return newStep;
       }
-
-      // Calculate scroll progress from 0 to 1
-      const progress = Math.max(0, Math.min(1, -top / scrollableHeight));
-      
-      // Determine the new step, snapping to the nearest one
-      const newStep = Math.round(progress * (steps.length - 1));
-
-      // Use the functional update to avoid stale state issues
-      setActiveStep(prevStep => {
-        if (newStep !== prevStep) {
-          return newStep;
-        }
-        return prevStep; 
-      });
-    };
-
-    // Add the event listener once when the component mounts
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Clean up the listener when the component unmounts
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []); 
+      return prevStep; 
+    });
+  });
 
   return (
     <div ref={containerRef} className="relative h-[250vh] bg-transparent py-16 text-white">

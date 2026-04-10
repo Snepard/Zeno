@@ -5,93 +5,29 @@ import Footer from './Footer';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ReactLenis } from '@studio-freight/react-lenis';
 import CardSwap, { Card } from './CardSwap';
 import Particles from './Particles';
+import AnimatedHero from './hero/AnimatedHero';
 
 // --- SVG Icons for Features ---
 const FeatureIcon1 = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-  </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
 );
 const FeatureIcon2 = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-  </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    </svg>
 );
 const FeatureIcon3 = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
     </svg>
-  );
+);
 
 // --- Components ---
-
-const HeroSection = () => (
-  <div className="relative flex items-center justify-center pt-40 pb-20 bg-transparent overflow-hidden">
-    
-    {/* Floating animated blobs for dark mode background aesthetic */}
-    <div className="absolute top-20 right-10 w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] pointer-events-none animate-pulse z-0"></div>
-    <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
-
-    <div className="container mx-auto px-6 z-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        <div className="text-center md:text-left relative z-10">
-          <motion.h1
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                    style={{
-                        fontSize: 'clamp(3rem, 4vw, 5rem)',
-                        fontWeight: '800',
-                        letterSpacing: '-0.04em',
-                        lineHeight: '1.1',
-                        marginBottom: '1.5rem',
-                        color: '#ffffff' // Back to white since background is dark
-                    }}
-                >
-                    Study Smarter. Score Higher. <br /> With{' '}
-                    <span style={{ position: 'relative', display: 'inline-block', zIndex: 1, padding: '0 0.2em' }}>
-                        {/* Animated Highlighter Background */}
-                        <motion.span
-                            initial={{ width: '0%', opacity: 0 }}
-                            animate={{ width: '100%', opacity: 1 }}
-                            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-                            style={{
-                                position: 'absolute',
-                                left: 0,
-                                top: '0.1em',
-                                bottom: '0.1em',
-                                backgroundColor: '#9333ea', // Darker purple highlight
-                                zIndex: -1,
-                                borderRadius: '4px',
-                                opacity: 0.8,
-                                boxShadow: '0 0 20px rgba(147, 51, 234, 0.5)'
-                            }}
-                        />
-                        <span style={{ position: 'relative', zIndex: 2, fontFamily: '"Lobster", cursive', fontWeight: 'normal', fontStyle: 'normal', color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>Zeno</span>
-                    </span>
-                </motion.h1>
-          <p className="text-lg text-gray-300 mb-8 max-w-lg mx-auto md:mx-0">
-            Upload your course material to generate beautifully interactive visual lectures or engaging dual-host podcasts instantly.
-          </p>
-          <Link to="/upload">
-            <button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-8 rounded-full text-lg hover:from-purple-500 hover:to-indigo-500 transition-all transform hover:scale-105 duration-300 shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_30px_rgba(147,51,234,0.6)] border border-purple-500/30">
-              Start Generating
-            </button>
-          </Link>
-        </div>
-        <div className="flex justify-center">
-          <img 
-            src="/homechar.png"
-            alt="Zeno Character" 
-            className="w-full h-auto object-contain max-w-lg drop-shadow-2xl"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 const FeaturesSection = () => {
     const features = [
@@ -337,40 +273,42 @@ const FAQSection = () => {
 // --- Main Landing Page Component ---
 
 const LandingPage = () => {
-  return (
-    <div className="flex flex-col min-h-screen text-white font-sans selection:bg-purple-500/30 relative">
-      <div className="fixed inset-0 z-0 bg-[#0B0A10]">
-          <Particles
-              particleColors={["#e3c5fc", "#a855f7", "#ffffff"]}
-              particleCount={200}
-              particleSpread={10}
-              speed={0.1}
-              particleBaseSize={100}
-              moveParticlesOnHover={false}
-              alphaParticles
-              disableRotation={false}
-              pixelRatio={1}
-          />
-      </div>
+    return (
+        <ReactLenis root options={{ lerp: 0.05, duration: 1.5, smoothWheel: true }}>
+            <div className="flex flex-col min-h-screen text-white font-sans selection:bg-purple-500/30 relative">
+                <div className="fixed inset-0 z-0 bg-[#0B0A10]">
+                    <Particles
+                        particleColors={["#e3c5fc", "#a855f7", "#ffffff"]}
+                        particleCount={200}
+                        particleSpread={10}
+                        speed={0.1}
+                        particleBaseSize={100}
+                        moveParticlesOnHover={false}
+                        alphaParticles
+                        disableRotation={false}
+                        pixelRatio={1}
+                    />
+                </div>
 
-      <Navbar />
-      
-      <div className="relative z-10 flex flex-col w-full">
-          <HeroSection />
-          <FeaturesSection />
-          
-          <section className="relative">
-            <HowItWorksScroller />
-          </section>
-          
-          <FAQSection />
-      </div>
+                <Navbar />
 
-      <div className="relative z-20 bg-[#0B0A10]">
-          <Footer />
-      </div>
-    </div>
-  );
+                <div className="relative z-10 flex flex-col w-full">
+                    <AnimatedHero />
+                    <FeaturesSection />
+
+                    <section className="relative">
+                        <HowItWorksScroller />
+                    </section>
+
+                    <FAQSection />
+                </div>
+
+                <div className="relative z-20 bg-[#0B0A10]">
+                    <Footer />
+                </div>
+            </div>
+        </ReactLenis>
+    );
 };
 
 export default LandingPage;

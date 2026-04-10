@@ -5,7 +5,7 @@ import { useGLTF, useAnimations } from '@react-three/drei'
 import { SkeletonUtils } from 'three-stdlib'
 import { Lipsync } from 'wawa-lipsync'
 
-export function Ziva({ audio, playTick, isSpeaking, ...props }) {
+export function Ziva({ audio, playTick, isSpeaking, overrideAnim, ...props }) {
   const group = useRef(null)
 
   // Avatar model
@@ -35,12 +35,17 @@ export function Ziva({ audio, playTick, isSpeaking, ...props }) {
   }, [clips])
 
   const { actions, names } = useAnimations(clips || [], group)
-  
+
   const [currentAnim, setCurrentAnim] = useState('idle');
   const [hasGreeted, setHasGreeted] = useState(false);
 
   // Determine which animation state to be in based on isSpeaking
   useEffect(() => {
+    if (overrideAnim) {
+      setCurrentAnim(overrideAnim);
+      return;
+    }
+
     let timeoutId;
     let intervalId;
 
@@ -57,11 +62,11 @@ export function Ziva({ audio, playTick, isSpeaking, ...props }) {
     } else {
       const pausedAnims = ['happy', 'idle', 'look around'];
       setCurrentAnim(pausedAnims[Math.floor(Math.random() * pausedAnims.length)]);
-      
+
       // Randomly cycle through idle animations when paused
       intervalId = setInterval(() => {
         setCurrentAnim(pausedAnims[Math.floor(Math.random() * pausedAnims.length)]);
-      }, 5000); 
+      }, 5000);
     }
 
     return () => {
@@ -81,12 +86,12 @@ export function Ziva({ audio, playTick, isSpeaking, ...props }) {
     };
 
     let clipName = findClipName(currentAnim);
-    
+
     // Fallbacks just in case the GLB names are slightly different
     if (!clipName && currentAnim === 'talking') clipName = findClipName('talk');
     if (!clipName && currentAnim === 'greeting') clipName = findClipName('greet');
     if (!clipName && currentAnim === 'look around') clipName = findClipName('look');
-    
+
     // Default fallback
     if (!clipName) clipName = findClipName('idle') || names[0];
 
@@ -111,7 +116,7 @@ export function Ziva({ audio, playTick, isSpeaking, ...props }) {
     if (!window.__sharedLipsyncMap) {
       window.__sharedLipsyncMap = new WeakMap();
     }
-    
+
     // Initialize lipsync instance if needed
     if (!window.__sharedLipsyncMap.has(audio)) {
       window.__sharedLipsyncMap.set(audio, new Lipsync());
