@@ -3,43 +3,49 @@ from workers.tasks.utils import sync_update_job
 from storage.local_storage import save_json
 from models.job import JobStatus
 from ai_engine.pipelines.podcast_pipeline import run_podcast_pipeline
+from workers.tasks.audio_tasks import generate_podcast_audio_subtask
+from celery import group
 import logging
 
 logger = logging.getLogger(__name__)
 
 @celery_app.task(bind=True, max_retries=3)
 def generate_podcast_task(self, job_id: str, user_id: str, topic: str):
-    logger.info(f"[Podcast Task] Live generation started for {job_id} on '{topic}'")
+    logger.info(f"[Main Podcast Runner] Process successfully hooked natively: Job {job_id} on '{topic}'")
     
     try:
-        # Initial 10%
         sync_update_job(job_id, JobStatus.processing, progress=10)
-        
-        # Dialouge Generation starting indicator
         sync_update_job(job_id, JobStatus.processing, progress=40)
         
-        # 100% genuine LLM mapping process blocking
         pipeline_output = run_podcast_pipeline(job_id, topic)
         
-        # 70% indicate file execution finishing sequence
-        sync_update_job(job_id, JobStatus.processing, progress=70)
-        
-        # Output JSON embedding 
-        final_result = {
+        initial_result = {
             "topic": topic,
             "script_path": pipeline_output["paths"]["script"],
             "chunks_path": pipeline_output["paths"]["chunks"],
-            "script_preview": pipeline_output["script"],
-            "audio_path": None # Still missing physical MP3 Audio generator (Text-to-Speech phase)
+            "script": pipeline_output["script"],
         }
-        save_json(job_id, "metadata.json", final_result)
         
-        # 100% PSQL success
-        sync_update_job(job_id, JobStatus.completed, progress=100, result=final_result)
-        logger.info(f"[Podcast Task] Fully executed LLM generating Job {job_id}")
-        return final_result
+        # Stage 2 Audio Sub-processing Initializer (60%)
+        sync_update_job(job_id, JobStatus.processing, progress=60, result=initial_result)
+        
+        dialogues = pipeline_output["script"].get("dialogue", [])
+        total_turns = len(dialogues)
+        
+        if total_turns > 0:
+            logger.info(f"Unleashing {total_turns} distinct Podcast voice strings optimally natively...")
+            subtasks = [
+                generate_podcast_audio_subtask.s(job_id, idx, turn["text"], total_turns)
+                for idx, turn in enumerate(dialogues)
+            ]
+            # Fire Async Multi-threads strictly avoiding blocking architecture rules.
+            group(subtasks).apply_async()
+        else:
+            sync_update_job(job_id, JobStatus.completed, progress=100)
+
+        return True
 
     except Exception as exc:
-        logger.error(f"[Podcast Task] Critical failure via LLM mapping {job_id}: {exc}", exc_info=True)
+        logger.error(f"[Main Podcast Flow] Critical failure internally processing LLMs natively: {exc}", exc_info=True)
         sync_update_job(job_id, JobStatus.failed, error=str(exc))
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)

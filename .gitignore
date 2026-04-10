@@ -1,17 +1,79 @@
-node_modules/
-.venv/
+# --- Python & Backend ---
+# Python caching
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
 .env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables
 .env.*
+!.env.example
+
+# Test and coverage reporting
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+htmlcov/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# ML & RAG Vector files
+*.pkl
+*.index
+
+# Backend Storage generated artifacts
+backend/storage/*
+storage/*
+!backend/storage/.gitkeep
+!storage/.gitkeep
+
+# --- Node & Frontend ---
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+# Production build directories
 dist/
 build/
-coverage/
+out/
+.next/
+
+# Vite / React Caches
+.vite/
+.eslintcache
+
+# --- OS / IDE specific ---
 .DS_Store
-*.log
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 .vscode/
-storage/audio/*.mp3
-storage/slides/*.json
-storage/lectures/*.pptx
-storage/vector_store/*
-!.gitkeep
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
