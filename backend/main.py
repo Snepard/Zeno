@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import logging
-import os
 from pathlib import Path
 
 from config.settings import settings
@@ -13,14 +12,14 @@ from utils.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-# Ensure storage directory exists at startup
+# Ensure storage dir exists before static mount
 Path("storage").mkdir(exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("AI Guruji backend starting — using JSON file store (no DB/Redis required).")
+    logger.info("Zeno backend starting — JSON file store (no DB/Redis required).")
     yield
-    logger.info("AI Guruji backend shutting down.")
+    logger.info("Zeno backend shutting down.")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -36,10 +35,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve generated audio/video/storage files directly as static files
+# Serve generated audio/video files as static assets
 app.mount("/storage", StaticFiles(directory="storage"), name="storage")
 
-# Include all API routes
+# All API routes
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["health"])

@@ -9,7 +9,7 @@ const Footer = () => {
                 <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-8 mb-8">
                     {/* Logo (Left) */}
                     <Link to="/" className="flex items-center gap-3">
-                        <img src="/AiGLogo.png" alt="AI Guruji Logo" className="h-10 w-auto rounded-md" />
+                        <span className="text-white text-xl font-bold tracking-wide">Zeno</span>
                     </Link>
 
                     {/* Text (Right) */}
@@ -23,7 +23,7 @@ const Footer = () => {
                 {/* Bottom Bar */}
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-gray-500 text-center md:text-left">
-                        &copy; {new Date().getFullYear()} AI Guruji. All rights reserved.
+                        &copy; {new Date().getFullYear()} Zeno. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -46,3 +46,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

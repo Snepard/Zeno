@@ -26,7 +26,7 @@ export function createMockLecture(lectureId = DEMO_LECTURE_ID) {
       important_points: ['Retrieval practice', 'Spaced repetition', 'Feedback loops'],
       script: 'Practice and recall loops are what turn passive reading into active long-term understanding.',
       audio_url: '/sample.mp3',
-      slide_url: '/AiGLogo.png',
+      slide_url: '/faq.png',
     },
   ]
 
