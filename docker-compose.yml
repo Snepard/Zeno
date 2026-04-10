@@ -1,50 +1,71 @@
+version: '3.8'
+
 services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespassword}
+      POSTGRES_DB: ${POSTGRES_DB:-aiguruji}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     ports:
-      - '6379:6379'
-
-  mongo:
-    image: mongo:7
-    ports:
-      - '27017:27017'
+      - "6379:6379"
     volumes:
-      - mongo_data:/data/db
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  backend:
-    build: ./backend
-    env_file: .env
-    environment:
-      REDIS_URL: redis://redis:6379/0
-      MONGODB_URI: mongodb://mongo:27017/zeno
-      AI_ENGINE_URL: http://ai-engine:8000
-    depends_on:
-      - redis
-      - mongo
+  api:
+    build: 
+      context: ./backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
     ports:
-      - '4000:4000'
-
-  ai-engine:
-    build: ./ai-engine
-    env_file: .env
+      - "8000:8000"
     environment:
-      REDIS_URL: redis://redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespassword}@db:5432/${POSTGRES_DB:-aiguruji}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - SECRET_KEY=${SECRET_KEY:-super-secret-key-for-jwt-change-in-production}
     depends_on:
-      - redis
-    ports:
-      - '8000:8000'
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  workers:
-    build: ./workers
-    env_file: .env
+  worker:
+    build:
+      context: ./backend
+    command: celery -A worker.celery_app.celery_app worker --loglevel=info
+    volumes:
+      - ./backend:/app
     environment:
-      REDIS_URL: redis://redis:6379/0
-      MONGODB_URI: mongodb://mongo:27017/zeno
-      AI_ENGINE_URL: http://ai-engine:8000
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespassword}@db:5432/${POSTGRES_DB:-aiguruji}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
     depends_on:
-      - redis
-      - ai-engine
-      - mongo
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
-  mongo_data:
+  postgres_data:
+  redis_data:
