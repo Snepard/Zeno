@@ -13,7 +13,7 @@ def sanitize_text(text: str, max_length: int = 4000) -> str:
     text = text.replace('\n', ' ').strip()
     return text[:max_length]
 
-def generate_audio_manager(text: str, job_id: str, filename: str, subfolder: str = "audio") -> str:
+def generate_audio_manager(text: str, job_id: str, filename: str, subfolder: str = "audio", speaker: str = "Ziva") -> str:
     """
     Core Pipeline Logic strictly executing active fallbacks sequentially:
     1. Primary: Edge TTS (Highly Optimally Fast Async)
@@ -30,7 +30,8 @@ def generate_audio_manager(text: str, job_id: str, filename: str, subfolder: str
     
     # Phase 1: High Velocity API Engine
     try:
-        asyncio.run(generate_edge_tts(safe_text, output_path))
+        voice_id = "en-IN-PrabhatNeural" if speaker.upper() == "ZYRO" else "en-IN-NeerjaNeural"
+        asyncio.run(generate_edge_tts(safe_text, output_path, voice=voice_id))
         return output_path
     except Exception as e:
         logger.warning(f"[TTS Route Check 1] Edge TTS heavily faulted: {e}. Resolving Fallback A (Coqui)...")

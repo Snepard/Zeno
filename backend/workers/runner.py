@@ -55,7 +55,8 @@ def _run_podcast(job_id: str, topic: str, pdf_url: str = None):
         for i, turn in enumerate(dialogue):
             try:
                 text = turn.get("text", "")
-                generate_audio_manager(text, job_id, f"slide_{i + 1}.mp3")
+                speaker_id = turn.get("speaker", "Ziva")
+                generate_audio_manager(text, job_id, f"slide_{i + 1}.mp3", speaker=speaker_id)
                 turn["audio_url"] = f"/storage/{job_id}/audio/slide_{i + 1}.mp3"
             except Exception as ae:
                 logger.warning(f"Audio failed for turn {i+1}: {ae}")
