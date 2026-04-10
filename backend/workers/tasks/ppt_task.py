@@ -3,50 +3,59 @@ from workers.tasks.utils import sync_update_job
 from storage.local_storage import save_json
 from models.job import JobStatus
 from ai_engine.pipelines.ppt_pipeline import run_ppt_pipeline
+from workers.tasks.audio_tasks import generate_ppt_audio_subtask
+from celery import group
 import logging
 
 logger = logging.getLogger(__name__)
 
 @celery_app.task(bind=True, max_retries=3)
 def generate_ppt_task(self, job_id: str, user_id: str, topic: str):
+    """"
+    Supercharged Main Execution Thread generating initial PPT natively, followed
+    strictly by immediately spawning X detached concurrent group workers securely avoiding deadlocks.
     """
-    Real celery task logic powering a live PPT via LLMs natively connected.
-    Overrides the old mock logic entirely executing OpenAI/Gemini strictly via Pydantic parsing.
-    """
-    logger.info(f"[PPT Task] Live generation fully started for Job {job_id} on '{topic}'")
+    logger.info(f"[Main PPT Pipeline Runner] Generation initialized onto Job {job_id} / '{topic}'")
     
     try:
-        # Step 1: Initialize status accurately (10%)
         sync_update_job(job_id, JobStatus.processing, progress=10)
         
-        # Step 2: Push 40% indicating Active LLM Call Generation sequence starting
+        # 40% signifies strict LLM query starting synchronously natively
         sync_update_job(job_id, JobStatus.processing, progress=40)
         
-        # Step 3: Run pipeline blocking call (Wait for full AI completion, Chunking, DB mapping natively)
+        # Execute absolute native logic
         pipeline_output = run_ppt_pipeline(job_id, topic)
         
-        # Step 4: 70% Flag ensuring script completely captured correctly
-        sync_update_job(job_id, JobStatus.processing, progress=70)
-        
-        # Step 5: Assign final data layout accurately embedding the actual metadata locally for later usage (e.g WebSockets).
-        final_result = {
+        # Format Data Schema Mapping immediately into PSQL for frontend rendering while Audio spins up
+        initial_result = {
             "topic": topic,
             "script_path": pipeline_output["paths"]["script"],
             "chunks_path": pipeline_output["paths"]["chunks"],
-            "script_preview": pipeline_output["script"]  
+            "script": pipeline_output["script"]  
         }
         
-        # Store metadata wrapper locally directly alongside script JSONs!
-        save_json(job_id, "metadata.json", final_result)
+        # Signal 60% completion natively proving Script JSON perfectly completed natively.
+        sync_update_job(job_id, JobStatus.processing, progress=60, result=initial_result)
         
-        # Step 6: Trigger fully Completed into PSQL
-        sync_update_job(job_id, JobStatus.completed, progress=100, result=final_result)
+        # --- PARALLEL AUDIO DEPLOYMENT SEQUENCES ---
+        slides = pipeline_output["script"].get("slides", [])
+        total_slides = len(slides)
         
-        logger.info(f"[PPT Task] Live generation fully completed Job {job_id}")
-        return final_result
+        if total_slides > 0:
+            logger.info(f"Unleashing {total_slides} concurrent background Audio processes.")
+            subtasks = [
+                generate_ppt_audio_subtask.s(job_id, slide["slide_no"], slide.get("explanation", ""), total_slides) 
+                for slide in slides
+            ]
+            # Detach Group fully natively bypassing main thread locks globally.
+            group(subtasks).apply_async()
+        else:
+            # Fallback Native Resolution cleanly strictly mapped
+            sync_update_job(job_id, JobStatus.completed, progress=100)
+
+        return True # Resolves Main Task instantaneously allowing Workers CPU dominance optimally.
 
     except Exception as exc:
-        logger.error(f"[PPT Task] Live AI generation failed: {exc}", exc_info=True)
+        logger.error(f"[Main Pipeline Structure] Catastrophic LLM Thread Error: {exc}", exc_info=True)
         sync_update_job(job_id, JobStatus.failed, error=str(exc))
-        # Exponential backoff retry natively executed by Celery Daemon
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)

@@ -19,6 +19,7 @@ const Navbar = () => {
         setIsScrolled(false);
       }
     };
+
     window.addEventListener('scroll', handleScroll);
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -26,9 +27,9 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: "Create Lecture", path: "/upload" },
-    { name: "Sign In", path: "/signin" },
-    { name: "Sign Up", path: "/signup" },
+    { name: 'Create Lecture', path: '/upload' },
+    { name: 'Sign In', path: '/signin' },
+    { name: 'Sign Up', path: '/signup' },
   ];
 
   return (
@@ -45,14 +46,12 @@ const Navbar = () => {
           ${isHidden ? 'opacity-0 pointer-events-none -translate-y-full' : 'opacity-100 translate-y-0'}
         `}
       >
-        {/* Left: Logo */}
         <div className="text-xl md:text-2xl font-bold text-white tracking-wider flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
             <span className="hidden sm:block">Zeno</span>
           </Link>
         </div>
 
-        {/* Center: Navigation Links */}
         <ul className="flex items-center gap-4 sm:gap-10">
           {navLinks.map((link) => (
             <li key={link.path}>
@@ -83,4 +82,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

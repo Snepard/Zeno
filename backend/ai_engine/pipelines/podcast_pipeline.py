@@ -33,6 +33,13 @@ def run_podcast_pipeline(job_id: str, topic: str):
     chunks = chunk_podcast_script(script_data)
     chunks_path = save_json(job_id, "chunks.json", chunks)
     
+    # NEW STEP: RAG Vector compiling executing cleanly upon dialog sequences seamlessly
+    from ai_engine.rag.vector_store import build_and_save_index
+    try:
+        build_and_save_index(job_id, chunks)
+    except Exception as ve:
+        logger.error(f"[RAG FAISS ERROR] Failed building vector map covering Podcast Dialogue natively: {ve}")
+    
     return {
         "script": script_data,
         "paths": {

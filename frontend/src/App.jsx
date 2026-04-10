@@ -1,6 +1,6 @@
 import React, { useState, Suspense, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Upload, FileText, CheckCircle, Loader, PlayCircle, Mic2, Layers } from 'lucide-react';
+import { Upload, CheckCircle, Loader, PlayCircle, Mic2 } from 'lucide-react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import Show from './components/Show';
 import Podcast from './components/Podcast';
@@ -15,10 +15,9 @@ import { DEMO_LECTURE_ID, MOCK_MODE } from './config/mock';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:4000/api';
 
-// Memoize the background so it doesn't re-render on progress ticks
 const MemoizedFloatingLines = React.memo(() => (
-    <FloatingLines 
-        enabledWaves={["top","middle","bottom"]}
+    <FloatingLines
+        enabledWaves={["top", "middle", "bottom"]}
         lineCount={5}
         lineDistance={5}
         bendRadius={5}
@@ -38,7 +37,6 @@ function App() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [progress, setProgress] = useState(0);
 
-    // Cleanup interval on unmount
     useEffect(() => {
         const token = localStorage.getItem('access_token');
         if (token) {
@@ -143,7 +141,6 @@ function App() {
                     navigate(`/show/${lectureId}`);
                 }
             }, 500);
-
         } catch (error) {
             console.error("Generation failed:", error);
             clearInterval(progressIntervalRef.current);
@@ -155,34 +152,22 @@ function App() {
 
     const UploadRoute = (
         <div className="h-screen w-full flex items-center justify-center p-6 lg:p-12 overflow-hidden bg-black text-white relative z-0">
-            {/* Background Layer (Memoized to prevent jitter) */}
             <div className="absolute inset-0 z-0 pointer-events-auto">
                 <MemoizedFloatingLines />
             </div>
-            
-            {/* 
-                Main Animated Container:
-                Starts compact (max-w-[480px]), then expands horizontally (max-w-[1000px]) upon success.
-            */}
+
             <div className={`
-                relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)] 
+                relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)]
                 transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]
                 flex flex-col md:flex-row overflow-hidden max-h-full
                 ${uploadStatus === "success" ? "w-full max-w-5xl" : "w-full max-w-[480px]"}
             `}>
-                
-                {/* 
-                    Left Panel (Upload Area & Branding)
-                    Always visible. Remains fixed width in expanded state.
-                */}
                 <div className={`flex flex-col flex-shrink-0 transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] p-8 sm:p-10 ${uploadStatus === "success" ? "w-full md:w-[480px] border-b md:border-b-0 md:border-r border-white/10 bg-black/20" : "w-full"}`}>
-                    
                     <div className="mb-8 text-center flex flex-col items-center">
                         <div className="relative mb-4">
                             <div className="h-[4.5rem] px-6 rounded-xl relative z-0 bg-white/10 border border-white/20 flex items-center justify-center">
                                 <span className="text-3xl font-bold tracking-wide text-white">Zeno</span>
                             </div>
-                            {/* Front-facing glow overlay */}
                             <div className="absolute inset-0 z-10 bg-purple-500/20 mix-blend-screen pointer-events-none rounded-xl blur-[12px] animate-pulse" />
                         </div>
                         <p className="text-slate-400 text-[15px] leading-relaxed text-center">
@@ -232,7 +217,7 @@ function App() {
                                 "Start Processing"
                             )}
                         </button>
-                        
+
                         {uploadStatus === "error" && (
                             <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium flex items-center justify-center gap-2 animate-fade-in-up">
                                 <CheckCircle className="w-4 h-4" /> Failed to ingest. Check backend.
@@ -241,15 +226,9 @@ function App() {
                     </div>
                 </div>
 
-                {/* 
-                    Right Panel (Generated Actions)
-                    Only mounts/slides in when upload is successful.
-                */}
                 <div className={`flex-1 flex flex-col transition-all duration-700 delay-150 ease-[cubic-bezier(0.2,0.8,0.2,1)] p-8 sm:p-10 ${uploadStatus === "success" ? "opacity-100 translate-x-0" : "opacity-0 translate-x-12 absolute inset-y-0 right-0 w-0 pointer-events-none"}`}>
-                    
                     {uploadStatus === "success" && ingestionData && (
                         <div className="h-full flex flex-col animate-fade-in custom-scrollbar overflow-y-auto">
-
                             <p className="text-slate-300 text-[15px] mb-8 leading-relaxed max-w-md">
                                 Your material has been successfully uploaded as <span className="font-mono font-bold text-white px-1.5 py-0.5 rounded bg-white/10">{ingestionData.pdf_url || 'latest PDF'}</span>. You are now ready to generate your lecture.
                             </p>
@@ -287,7 +266,7 @@ function App() {
                                 ) : (
                                     <div className="flex flex-col gap-4 w-full">
                                         <h3 className="text-white text-lg font-semibold mb-2">Select Format:</h3>
-                                        
+
                                         <button
                                             onClick={() => handleGenerate('slides')}
                                             className="group relative w-full p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50 transition-all text-left flex items-start gap-4 overflow-hidden"
@@ -319,7 +298,6 @@ function App() {
                         </div>
                     )}
                 </div>
-
             </div>
         </div>
     );

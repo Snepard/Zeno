@@ -41,6 +41,13 @@ def run_ppt_pipeline(job_id: str, topic: str):
     chunks = chunk_ppt_script(script_data)
     chunks_path = save_json(job_id, "chunks.json", chunks)
     
+    # NEW STEP: FAISS Vector RAG index compilation triggered seamlessly locally
+    from ai_engine.rag.vector_store import build_and_save_index
+    try:
+        build_and_save_index(job_id, chunks)
+    except Exception as ve:
+        logger.error(f"[RAG FAISS ERROR] Extracted chunks failed compiling: {ve}")
+    
     # 5. Return explicit memory references
     return {
         "script": script_data,
